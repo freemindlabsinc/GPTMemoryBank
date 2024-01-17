@@ -1,18 +1,18 @@
 {
-    "schema_version": "v1",
-    "name_for_model": "memorybank",
-    "name_for_human": "Free Mind Labs' Memory Bank",
-    "description_for_model": "Plugin for searching the user's private memory bank. Use it whenever a user asks a question and you cannot find an answer.",
-    "description_for_human": "Save an retrieve information from your private memory bank.",
-    "auth": {
-      "type": "none"
-    },
-    "api": {
-      "type": "openapi",
-      "is_user_authenticated": "false",
-      "url": "$host/.well-known/openapi.yaml"
-    },
-    "logo_url": "$host/.well-known/logo.png",
-    "contact_email": "noreply@freemindlabs.com",
-    "legal_info_url": "$host/.well-known/legal.txt"
-  }
+  "schema_version": "v1",
+  "name_for_model": "memorybank",
+  "name_for_human": "Free Mind Labs' Memory Bank",
+  "description_for_model": "Plugin for searching the user's private memory bank. Use it whenever a user asks a question and you cannot find an answer.",
+  "description_for_human": "Save an retrieve information from your private memory bank.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "is_user_authenticated": "false",
+    "url": "https://933b-100-34-174-93.ngrok-free.app/.well-known/openapi.yaml"
+  },
+  "logo_url": "https://933b-100-34-174-93.ngrok-free.app/.well-known/logo.png",
+  "contact_email": "noreply@freemindlabs.com",
+  "legal_info_url": "https://933b-100-34-174-93.ngrok-free.app/.well-known/legal.txt"
+}
