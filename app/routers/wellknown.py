@@ -1,5 +1,6 @@
 import yaml
 import json
+import os
 from string import Template
 from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, Response
@@ -14,9 +15,9 @@ def get_host(request: Request):
 
 
 def get_ai_plugin():
+    currDir = os.getcwd()
     with open(".well-known/ai-plugin.json", encoding="utf-8") as file:
         return json.loads(file.read())
-
 
 @wellknown.get("/openapi.yaml", include_in_schema=False)
 async def openapi_yaml(request: Request):

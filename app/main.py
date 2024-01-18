@@ -1,5 +1,6 @@
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from uvicorn.config import HTTPProtocolType
 from dependencies import get_query_token, get_token_header
 from internal import admin
 from routers import items, users, memory, wellknown

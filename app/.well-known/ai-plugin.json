@@ -10,9 +10,9 @@
   "api": {
     "type": "openapi",
     "is_user_authenticated": "false",
-    "url": "https://933b-100-34-174-93.ngrok-free.app/.well-known/openapi.yaml"
+    "url": "$host/.well-known/openapi.yaml"
   },
-  "logo_url": "https://933b-100-34-174-93.ngrok-free.app/.well-known/logo.png",
+  "logo_url": "$host/.well-known/logo.png",
   "contact_email": "noreply@freemindlabs.com",
-  "legal_info_url": "https://933b-100-34-174-93.ngrok-free.app/.well-known/legal.txt"
+  "legal_info_url": "$host/.well-known/legal.txt"
 }
