@@ -5,8 +5,7 @@ from string import Template
 from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, Response
 
-wellknown = APIRouter(prefix="/.well-known", tags=["well-known"])
-
+router = APIRouter(prefix="/.well-known", tags=["well-known"])
 
 def get_host(request: Request):
     host_header = request.headers.get("X-Forwarded-Host") or request.headers.get("Host")
@@ -19,7 +18,7 @@ def get_ai_plugin():
     with open(".well-known/ai-plugin.json", encoding="utf-8") as file:
         return json.loads(file.read())
 
-@wellknown.get("/openapi.yaml", include_in_schema=False)
+@router.get("/openapi.yaml", include_in_schema=False)
 async def openapi_yaml(request: Request):
     openapi = request.app.openapi()
     openapi["servers"] = [{"url": get_host(request)}]
@@ -32,12 +31,16 @@ async def openapi_yaml(request: Request):
     )
 
 
-@wellknown.get("/logo.png", include_in_schema=False)
+@router.get("/logo.png", include_in_schema=False)
 async def logo():
     return FileResponse(".well-known/logo.png", media_type="image/png")
 
+@router.get("/legal.txt", include_in_schema=False)
+async def legal():
+    return FileResponse(".well-known/legal.txt", media_type="text/plain")
 
-@wellknown.get("/ai-plugin.json", include_in_schema=False)
+
+@router.get("/ai-plugin.json", include_in_schema=False)
 async def manifest(request: Request):
     ai_plugin = get_ai_plugin()
     return Response(

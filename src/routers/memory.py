@@ -14,9 +14,15 @@ class StoreRequest(BaseModel):
     memory: str
     topic: str = None
     
+class StoreResponse(BaseModel):    
+    response: str
+    
 class QueryRequest(BaseModel):
     query: str
     topic: str = None    
+    
+class QueryResponse(BaseModel):
+    response: str
 
 @router.post("/save", summary="Saves a memory in the memory bank", operation_id="saveMemory")
 async def save_memory(store_request: StoreRequest):

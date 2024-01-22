@@ -1,0 +1,38 @@
+I want to write a well-structured and clearly-coded Python application that exposes a REST API endpoint 
+that will be used by a custom GPT I am writing. 
+The purpose of the API is to add data to a memory bank (the application) and then ask questions on such data.
+
+Data can be a simple text message or a url pointing to a web resource (e.g. a google drive folder, a web site, 
+a YouTube video, etc.).
+
+The SCHEMA section below gives you a description of the end point I want to create
+The IMPLEMENTATION section adds important information that needs to be considred when writing the code.
+
+# SCHEMA
+
+# Stores the text message in the specified collection.
+POST /memory/remember
+    -text_message (string): required & non-empty
+    -collection (string): optional. If unspecified the 'default' collection is used.
+
+    returns: 
+        -a standard JSON response indicating if the import has been queued or if it failed, and
+        a job id of sorts (see implementation details below).
+
+# Answers a question by looking at the data stored in the collections.
+GET /memory/ask
+    -question (string): required & non-empty
+    -collections (string[]): optional. If unspecified all collections will be searched.
+
+# IMPLEMENTATION
+
+-The POST queues a message in an Azure Storage queue and returns some sort of job id and information on errors.
+    -There will be some decision of what type of text_message we're looking at (i.e. a url or free-text), and
+     depending on what we determine, a different queue will be used.
+    -The queues so far would be IMPORT_RESOURCE and IMPORT_MESSAGE.
+
+-The GET goes to LLamaIndex and queries it to get the answer to the question. I will handle the details of the 
+implementation of this method.
+    
+-The purpose of the POST/remember action is to get some text that is either a url of some kind or simple text.
+If the text is a url of anytype, we will 
