@@ -56,10 +56,11 @@ async def remember(request: RememberRequest) -> List[RememberJob]:
 @router.get("/ask", summary="Queries the memory bank", operation_id="queryMemory")
 async def ask(
     question: str = Query(..., description="The question to ask"), 
-    collections: Optional[List[str]] = Query(..., description="The collections to query")) -> List[QuestionResponse]:
+    collections: Optional[str] = Query(None, description="The collections to query (comma separated).")) -> List[QuestionResponse]:
     # Implementation of LLamaIndex query goes here
     # For now, return a placeholder response
+    colls = collections.split(",") if collections else ['*'] 
     return [
-        QuestionResponse(answer=f"The answer to '{question}' is '42'.", collections=collections, confidence=0.1, links=["https://en.wikipedia.org/wiki/42_(number)", "https://en.wikipedia.org/wiki/hitchhikers_guide_to_the_galaxy"]),
-        QuestionResponse(answer=f"The other answer is '{question}' is 'maybe'.", collections=collections, confidence=0.2, links=["https://en.wikipedia.org/wiki/Maybe", "https://cdn1.vectorstock.com/i/1000x1000/56/45/maybe-stamp-vector-16595645.jpg"]),
-        ]
+        QuestionResponse(answer=f"The answer to '{question}' is '42'.", collections=colls, confidence=0.1, links=["https://en.wikipedia.org/wiki/42_(number)", "https://en.wikipedia.org/wiki/hitchhikers_guide_to_the_galaxy"]),
+        QuestionResponse(answer=f"The other answer is '{question}' is 'maybe'.", collections=colls, confidence=0.2, links=["https://en.wikipedia.org/wiki/Maybe", "https://cdn1.vectorstock.com/i/1000x1000/56/45/maybe-stamp-vector-16595645.jpg"]),
+        ]    
