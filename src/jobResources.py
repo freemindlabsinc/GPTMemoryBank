@@ -2,12 +2,14 @@ import time
 import os
 import json
 from azure.storage.queue import QueueServiceClient
-from ..models.memory_models import (Message, Resource)
+from models.memory_models import (Message, Resource)
 from azure.core.exceptions import ResourceExistsError
 
+# Get the Azure storage connection string and the import resource queue from environment variables 
 AZURE_STORAGE_CONNECTION_STRING = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
 IMPORT_RESOURCE_QUEUE = os.getenv('IMPORT_RESOURCE_QUEUE')
 
+# Create a QueueServiceClient object that will be used to create a queue client
 queue_service = QueueServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
 try:
     # create the queue if it doesn't exist
@@ -16,6 +18,7 @@ except ResourceExistsError:
     # Resource exists
     pass    
 
+# Functionality
 def import_resource(resource: Resource):
     # For now we just print a message
     print(f"Importing {resource.address} in collection {resource.collection}")

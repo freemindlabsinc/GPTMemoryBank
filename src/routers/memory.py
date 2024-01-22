@@ -8,25 +8,33 @@ from pydantic import BaseModel, Field
 from typing import List
 import json
 
+# Retrieve environment variables for Azure Storage and Queue names
+AZURE_STORAGE_CONNECTION_STRING = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
+IMPORT_RESOURCE_QUEUE = os.getenv('IMPORT_RESOURCE_QUEUE')
+SAVE_MESSAGE_QUEUE = os.getenv('SAVE_MESSAGE_QUEUE')
+
+# Create a new router for the memory related endpoints
 router = APIRouter(
     prefix="/memory",
     tags=["memory"],
     responses={404: {"description": "Not found"}},
 )
 
-AZURE_STORAGE_CONNECTION_STRING = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
-IMPORT_RESOURCE_QUEUE = os.getenv('IMPORT_RESOURCE_QUEUE')
-SAVE_MESSAGE_QUEUE = os.getenv('SAVE_MESSAGE_QUEUE')
-
+# Create a QueueServiceClient object that will be used to send messages to the queue
 queue_service = QueueServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
 
 # Endpoints
 
+# This endpoint accepts a POST request with a RememberRequest object
+# It sends each message and resource in the request to a separate Azure Queue for processing
+# It returns a list of RememberJob objects, each representing the status of a message or resource that was sent to the queue
 @router.post("/remember", response_model=List[RememberJob], summary="Stores a memory in the memory bank", operation_id="storeMemory")
 async def remember(request: RememberRequest) -> List[RememberJob]:
     responses = []
+    
+    # Send each message to the queue
+    queue_client = queue_service.get_queue_client(SAVE_MESSAGE_QUEUE)                
     for message in request.messages:        
-        queue_client = queue_service.get_queue_client(SAVE_MESSAGE_QUEUE)        
         resp = queue_client.send_message(message.model_dump_json() )  # Send the JSON message
         
         responses.append(
@@ -38,8 +46,9 @@ async def remember(request: RememberRequest) -> List[RememberJob]:
         
         print(f"Sent message {message.text} to queue {queue_client.queue_name} with id {resp.id}")
         
-    for res in request.resources:        
-        queue_client = queue_service.get_queue_client(IMPORT_RESOURCE_QUEUE)                
+    # Send each resource to the queue
+    queue_client = queue_service.get_queue_client(IMPORT_RESOURCE_QUEUE)                
+    for res in request.resources:                
         resp = queue_client.send_message(res.model_dump_json())  # Send the JSON URL
         
         responses.append(
