@@ -6,12 +6,13 @@ from models.memory_models import (Message, Resource)
 from models.endpoint_models import (RememberRequest, RememberJob, QuestionResponse)
 from pydantic import BaseModel, Field
 from typing import List
-import json
+from internal.config import get_configured
+from internal.logger import setup_logger
 
 # Retrieve environment variables for Azure Storage and Queue names
-AZURE_STORAGE_CONNECTION_STRING = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
-IMPORT_RESOURCE_QUEUE = os.getenv('IMPORT_RESOURCE_QUEUE')
-SAVE_MESSAGE_QUEUE = os.getenv('SAVE_MESSAGE_QUEUE')
+AZURE_STORAGE_CONNECTION_STRING = get_configured('AZURE_STORAGE_CONNECTION_STRING', is_required=True)
+IMPORT_RESOURCE_QUEUE = get_configured('IMPORT_RESOURCE_QUEUE', is_required=True)
+SAVE_MESSAGE_QUEUE = get_configured('SAVE_MESSAGE_QUEUE', is_required=True)
 
 # Create a new router for the memory related endpoints
 router = APIRouter(

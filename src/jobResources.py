@@ -19,17 +19,17 @@ def import_resource(resource_dict):
     resource = Resource(**resource_dict)
     
     resource_type = url_utils.get_service_from_url(resource.address)
-    if resource_type == uu.Service.Unsupported:
+    if resource_type == url_utils.Service.Unsupported:
         # For now we just log a message
         logger.warn(f"Unsupported resource type for {resource.address}")
         return
-    elif resource_type == uu.Service.YouTube:
+    elif resource_type == url_utils.Service.YouTube:
         # Handle YouTube URL
         logger.info(f"YouTube URL: {resource.address}")
-    elif resource_type == uu.Service.GoogleDrive:
+    elif resource_type == url_utils.Service.GoogleDrive:
         # Handle Google Drive URL
         logger.info(f"Google Drive URL: {resource.address}")
-    elif resource_type == uu.Service.WebAddress:
+    elif resource_type == url_utils.Service.WebAddress:
         # Handle Web Address
         logger.info(f"Web Address: {resource.address}")
     else:

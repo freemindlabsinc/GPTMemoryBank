@@ -36,11 +36,11 @@ def process_queue(queue_service, queue_name, import_resource, logger, remove_mes
             count += 1
             if remove_messages:                
                 queue_client.delete_message(message)
-                logger.info(f"Deleted message {message.id}")
+                logger.info(f"Deleted queued message {message.id}")
                 
         except Exception as e:
-            logger.error(f"Error processing message: {e}")
+            logger.error(f"Error processing queued message: {e}")
             #queue_client.delete_message(message)
             #raise e
     
-    logger.info(f"Processed {count} messages")
+    logger.info(f"Processed {count} queued messages")
