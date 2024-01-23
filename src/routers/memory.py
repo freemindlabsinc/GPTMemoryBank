@@ -70,6 +70,6 @@ async def ask(
     # For now, return a placeholder response
     colls = collections.split(",") if collections else ['*'] 
     return [
-        QuestionResponse(answer=f"The answer to '{question}' is '42'.", collections=colls, confidence=0.1, links=["https://en.wikipedia.org/wiki/42_(number)", "https://en.wikipedia.org/wiki/hitchhikers_guide_to_the_galaxy"]),
-        QuestionResponse(answer=f"The other answer is '{question}' is 'maybe'.", collections=colls, confidence=0.2, links=["https://en.wikipedia.org/wiki/Maybe", "https://cdn1.vectorstock.com/i/1000x1000/56/45/maybe-stamp-vector-16595645.jpg"]),
+        QuestionResponse(answer=f"The answer to '{question}' is '42'.", collections=colls, confidence=0.9, links=["https://en.wikipedia.org/wiki/42_(number)", "https://en.wikipedia.org/wiki/hitchhikers_guide_to_the_galaxy"]),
+        QuestionResponse(answer=f"The other answer is '{question}' is 'maybe 1420'.", collections=colls, confidence=0.8, links=["https://en.wikipedia.org/wiki/Maybe", "https://cdn1.vectorstock.com/i/1000x1000/56/45/maybe-stamp-vector-16595645.jpg"]),
         ]    
