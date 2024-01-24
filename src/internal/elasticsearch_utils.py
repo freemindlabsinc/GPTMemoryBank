@@ -70,14 +70,14 @@ async def get_index() -> VectorStoreIndex:
     )
                               
     if (not os.path.exists(persist_directory)):
-        storage_context = StorageContext.from_defaults(vector_store=es_vector_store)#, persist_dir=persist_directory)
+        storage_context = StorageContext.from_defaults(vector_store=es_vector_store)
         
         docs = SimpleDirectoryReader("./docs").load_data(show_progress=True)    
         index = VectorStoreIndex.from_documents(docs, storage_context=storage_context, show_progress=True)
         
         storage_context.persist(persist_dir=persist_directory)                
     else:
-        storage_context = StorageContext.from_defaults(            
+        storage_context = StorageContext.from_defaults(
             persist_dir=persist_directory, 
             vector_store=es_vector_store)
         

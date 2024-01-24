@@ -82,6 +82,7 @@ pydantic_core==2.14.6
 pygtrie==2.5.0
 PyJWT==2.8.0
 pyparsing==3.1.1
+pypdf==4.0.0
 pyreadline3==3.4.1
 python-dateutil==2.8.2
 python-dotenv==1.0.1

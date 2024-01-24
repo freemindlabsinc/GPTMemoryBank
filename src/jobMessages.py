@@ -18,7 +18,7 @@ AZURE_STORAGE_CONNECTION_STRING = get_configured('AZURE_STORAGE_CONNECTION_STRIN
 SAVE_MESSAGE_QUEUE = get_configured('SAVE_MESSAGE_QUEUE', is_required=True)
 
 DELETE_QUEUE = False
-REMOVE_MESSAGES = False
+REMOVE_MESSAGES = True
 
 # Set up logging
 logger = setup_logger(__name__)
@@ -26,7 +26,7 @@ logger = setup_logger(__name__)
 # Functionality
 
 async def main():
-    index = esutils.get_index()
+    index = await esutils.get_index()
     
     def index_message(resource_dict):
         message = Message(**resource_dict)
