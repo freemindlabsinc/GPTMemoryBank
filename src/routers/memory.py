@@ -8,6 +8,14 @@ from pydantic import BaseModel, Field
 from typing import List
 from internal.config import get_configured
 from internal.logger import setup_logger
+from internal import elasticsearch_utils as esutils
+from llama_index.vector_stores import ElasticsearchStore
+from llama_index import ServiceContext
+from llama_index.llms import OpenAI
+from llama_index.embeddings import HuggingFaceEmbedding    
+from llama_index import VectorStoreIndex
+from llama_index.storage.storage_context import StorageContext
+from llama_index import SimpleDirectoryReader
 
 # Retrieve environment variables for Azure Storage and Queue names
 AZURE_STORAGE_CONNECTION_STRING = get_configured('AZURE_STORAGE_CONNECTION_STRING', is_required=True)
@@ -66,11 +74,23 @@ async def remember(request: RememberRequest) -> List[RememberJob]:
 @router.get("/ask", summary="Queries the memory bank", operation_id="queryMemory")
 async def ask(
     question: str = Query(..., description="The question to ask"), 
-    collections: Optional[str] = Query(None, description="The collections to query (comma separated).")) -> List[QuestionResponse]:
+    collections: Optional[str] = Query(None, description="The collections to query (comma separated).")) -> QuestionResponse:
     # Implementation of LLamaIndex query goes here
-    # For now, return a placeholder response
+    index = await esutils.get_index()
+       
+    query_engine = index.as_query_engine()
+    resp = query_engine.query(question)    
+
+    list = []    
+    for source_node in resp.source_nodes:        
+        list.append(source_node.text)
+        
+    # create a QuestionResponse object with the source nodes data
     colls = collections.split(",") if collections else ['*'] 
-    return [
-        QuestionResponse(answer=f"The answer to '{question}' is '42'.", collections=colls, confidence=0.9, links=["https://en.wikipedia.org/wiki/42_(number)", "https://en.wikipedia.org/wiki/hitchhikers_guide_to_the_galaxy"]),
-        QuestionResponse(answer=f"The other answer is '{question}' is 'maybe 1420'.", collections=colls, confidence=0.8, links=["https://en.wikipedia.org/wiki/Maybe", "https://cdn1.vectorstock.com/i/1000x1000/56/45/maybe-stamp-vector-16595645.jpg"]),
-        ]    
+    qr = QuestionResponse(
+        answer=resp.response, 
+        collections=colls, 
+        confidence=0.9, 
+        links=list)    
+    
+    return qr  
