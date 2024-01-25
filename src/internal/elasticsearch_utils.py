@@ -19,11 +19,21 @@ from llama_index import (
 from llama_index.data_structs.data_structs import IndexStruct
 from llama_index.storage.docstore import RedisDocumentStore
 from llama_index.storage.index_store import RedisIndexStore
+from llama_index.llms import AzureOpenAI
+from llama_index.embeddings import AzureOpenAIEmbedding
 
 OPENAI_API_KEY = get_configured("OPENAI_API_KEY", is_required=True)
 OPENAI_CHAT_MODEL = get_configured("OPENAI_CHAT_MODEL", is_required=True)
 OPENAI_MODEL_TEMPERATURE = float(get_configured("OPENAI_MODEL_TEMPERATURE", 0.2))
 EMBEDDING_MODEL = get_configured("EMBEDDING_MODEL", is_required=True)
+
+AZURE_OPENAI_API_KEY  = get_configured("AZURE_OPENAI_API_KEY", is_required=False)
+AZURE_OPENAI_ENDPOINT = get_configured("AZURE_OPENAI_ENDPOINT", is_required=False)
+AZURE_OPENAI_API_VERSION = get_configured("AZURE_OPENAI_API_VERSION", is_required=False)
+AZURE_OPENAI_CHAT_MODEL = get_configured("AZURE_OPENAI_CHAT_MODEL", is_required=False)
+AZURE_OPENAI_CHAT_DEPLOYMENT_NAME = get_configured("AZURE_OPENAI_CHAT_DEPLOYMENT_NAME", is_required=False)
+AZURE_OPENAI_EMBEDDING_MODEL = get_configured("AZURE_OPENAI_EMBEDDING_MODEL", is_required=False)
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME = get_configured("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME", is_required=False)
 
 REDIS_SERVER = get_configured("REDIS_SERVER", "localhost")
 REDIS_PORT = int(get_configured("REDIS_PORT", 6379))
@@ -47,8 +57,27 @@ def create_elasticsearch_client() -> AsyncElasticsearch:
     return es_client
 
 def create_service_context() -> ServiceContext:
-    llm = OpenAI(model=OPENAI_CHAT_MODEL, temperature=OPENAI_MODEL_TEMPERATURE)        
-    embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL)
+    AZURE_OPENAI_API_KEY = None
+    if AZURE_OPENAI_API_KEY is not None:
+        llm = AzureOpenAI(
+        model=AZURE_OPENAI_CHAT_MODEL,
+        deployment_name=AZURE_OPENAI_CHAT_DEPLOYMENT_NAME,
+        api_key=AZURE_OPENAI_API_KEY,
+        azure_endpoint=AZURE_OPENAI_ENDPOINT,
+        api_version=AZURE_OPENAI_API_VERSION,
+        )
+        
+        embed_model = AzureOpenAIEmbedding(
+            model=AZURE_OPENAI_EMBEDDING_MODEL,
+            deployment_name=AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME,
+            api_key=AZURE_OPENAI_API_KEY,
+            azure_endpoint=AZURE_OPENAI_ENDPOINT,
+            api_version=AZURE_OPENAI_API_VERSION,
+        )
+    else:
+        llm = OpenAI(model=OPENAI_CHAT_MODEL, temperature=OPENAI_MODEL_TEMPERATURE)        
+        embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL)
+    
     
     service_context = ServiceContext.from_defaults(
         # callback_manager=callback_manager, 
@@ -66,14 +95,19 @@ async def get_index() -> VectorStoreIndex:
     persist_directory = "./.persistDir"
     es_vector_store = ElasticsearchStore(
         index_name=ES_DEFAULT_INDEX,
-        es_client=es_client    
+        es_client=es_client,            
     )
                               
     if (not os.path.exists(persist_directory)):
         storage_context = StorageContext.from_defaults(vector_store=es_vector_store)
         
-        docs = SimpleDirectoryReader("./docs").load_data(show_progress=True)    
-        index = VectorStoreIndex.from_documents(docs, storage_context=storage_context, show_progress=True)
+        docs = SimpleDirectoryReader("./docs").load_data(show_progress=True)
+        
+        index = VectorStoreIndex.from_documents(
+            docs, 
+            service_context=service_context, 
+            storage_context=storage_context, 
+            show_progress=True)
         
         storage_context.persist(persist_dir=persist_directory)                
     else:
@@ -81,7 +115,9 @@ async def get_index() -> VectorStoreIndex:
             persist_dir=persist_directory, 
             vector_store=es_vector_store)
         
-        index = load_index_from_storage(storage_context, show_progress=True)
+        index = load_index_from_storage(
+            storage_context=storage_context,            
+            show_progress=True)
         pass
     
     #storage_context = StorageContext.from_defaults(
