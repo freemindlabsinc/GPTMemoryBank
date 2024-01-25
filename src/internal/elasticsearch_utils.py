@@ -95,11 +95,11 @@ async def get_index() -> VectorStoreIndex:
     persist_directory = "./.persistDir"
     es_vector_store = ElasticsearchStore(
         index_name=ES_DEFAULT_INDEX,
-        es_client=es_client,            
+        es_client=es_client,
     )
                               
     if (not os.path.exists(persist_directory)):
-        storage_context = StorageContext.from_defaults(vector_store=es_vector_store)
+        storage_context = StorageContext.from_defaults(vector_store=es_vector_store)#, persist_dir=persist_directory)
         
         docs = SimpleDirectoryReader("./docs").load_data(show_progress=True)
         
@@ -113,11 +113,13 @@ async def get_index() -> VectorStoreIndex:
     else:
         storage_context = StorageContext.from_defaults(
             persist_dir=persist_directory, 
-            vector_store=es_vector_store)
+            vector_store=es_vector_store,
+            )
         
-        index = load_index_from_storage(
+        index = load_index_from_storage(            
             storage_context=storage_context,            
             show_progress=True)
+        index._service_context = service_context # Hack to get around the fact that the service context is correct
         pass
     
     #storage_context = StorageContext.from_defaults(
