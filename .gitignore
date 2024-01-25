@@ -161,7 +161,4 @@ cython_debug/
 
 .vs
 docs/.$Architecture.drawio.dtmp
-/src/.persistDir/docstore.json
-/src/.persistDir/graph_store.json
-/src/.persistDir/image__vector_store.json
-/src/.persistDir/index_store.json
+src/.persistDir/
