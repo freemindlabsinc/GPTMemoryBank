@@ -1,5 +1,5 @@
 import os
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, status
 from azure.storage.queue import QueueServiceClient
 from typing import Optional, List
 from models.memory_models import (Message, Resource)
@@ -26,19 +26,25 @@ SAVE_MESSAGE_QUEUE = get_configured('SAVE_MESSAGE_QUEUE', is_required=True)
 router = APIRouter(
     prefix="/memory",
     tags=["memory"],
-    responses={404: {"description": "Not found"}},
+    #responses={404: {"description": "Not found"}},
 )
 
 # Create a QueueServiceClient object that will be used to send messages to the queue
 queue_service = QueueServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
 
-# Endpoints
-
-# This endpoint accepts a POST request with a RememberRequest object
-# It sends each message and resource in the request to a separate Azure Queue for processing
-# It returns a list of RememberJob objects, each representing the status of a message or resource that was sent to the queue
-@router.post("/remember", response_model=List[RememberJob], summary="Stores a memory in the memory bank", operation_id="storeMemory")
+# -------------------- remember --------------------
+@router.post("/remember", 
+             response_model=List[RememberJob], 
+             status_code=status.HTTP_200_OK,
+             summary="Stores a memory in the memory bank", 
+             response_description="The list of jobs created to process the storing of the messages and resources",
+             operation_id="storeMemory")
 async def remember(request: RememberRequest) -> List[RememberJob]:
+    """
+    Memorize messages and resources in the memory bank XXX
+    
+    
+    """
     responses = []
     
     # Send each message to the queue
@@ -71,7 +77,10 @@ async def remember(request: RememberRequest) -> List[RememberJob]:
 
     return responses
 
-@router.get("/ask", summary="Queries the memory bank", operation_id="queryMemory")
+# -------------------- ask --------------------
+@router.get("/ask", 
+            summary="Queries the memory bank", 
+            operation_id="queryMemory")
 async def ask(
     question: str = Query(..., description="The question to ask"), 
     collections: Optional[str] = Query(None, description="The collections to query (comma separated).")) -> QuestionResponse:
