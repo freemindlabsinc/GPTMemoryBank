@@ -1,6 +1,6 @@
 import os
 from elasticsearch import AsyncElasticsearch
-from internal.config import get_configured
+from services.config import get_configured
 from elasticsearch import AsyncElasticsearch
 import llama_index
 from llama_index import (ServiceContext, SimpleDirectoryReader, VectorStoreIndex, Document)

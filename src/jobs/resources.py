@@ -1,8 +1,13 @@
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from models.memory_models import (Resource)
-from internal import url_utils
-from internal.config import get_configured
-from internal.logger import setup_logger
-from internal.queue_utils import setup_queue, process_queue
+from services import url_utils
+from services.config import get_configured
+from services.logger import setup_logger
+from services.queue_utils import setup_queue, process_queue
 
 # Read the configuration
 AZURE_STORAGE_CONNECTION_STRING = get_configured('AZURE_STORAGE_CONNECTION_STRING', is_required=True)

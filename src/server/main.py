@@ -6,6 +6,9 @@ from uvicorn.config import HTTPProtocolType
 from routers import memory, wellknown
 from fastapi.openapi.utils import get_openapi
 from routers.wellknown import get_ai_plugin
+from models.memory_models import (Message)
+from features import memory as mem
+from features import resources as res
 
 app = FastAPI()#dependencies=[Depends(get_query_token)])
 
@@ -20,6 +23,10 @@ app.add_middleware(
 
 app.include_router(wellknown.router)
 app.include_router(memory.router)
+
+# Features
+app.mount("/memory", mem.memory_app)
+app.mount("/resources", res.resources_app)
 
 def custom_openapi():
     if app.openapi_schema:

@@ -6,9 +6,9 @@ from models.memory_models import (Message, Resource)
 from models.endpoint_models import (RememberRequest, RememberJob, QuestionResponse)
 from pydantic import BaseModel, Field
 from typing import List
-from internal.config import get_configured
-from internal.logger import setup_logger
-from internal import elasticsearch_utils as esutils
+from services.config import get_configured
+from services.logger import setup_logger
+from services import elasticsearch_utils as esutils
 from llama_index.vector_stores import ElasticsearchStore
 from llama_index import ServiceContext
 from llama_index.llms import OpenAI
