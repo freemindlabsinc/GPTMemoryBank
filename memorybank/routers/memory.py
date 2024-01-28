@@ -1,7 +1,7 @@
 from loguru import logger
 from fastapi import APIRouter, HTTPException, Depends, Body
-from src.models.api import (QueryResponse, QueryRequest, QueryResult)
-from src.models.models import (DocumentChunkWithScore, DocumentChunkMetadata)
+from memorybank.models.api import (QueryResponse, QueryRequest, QueryResult)
+from memorybank.models.models import (DocumentChunkWithScore, DocumentChunkMetadata)
 
 router = APIRouter(
     prefix="/memory",

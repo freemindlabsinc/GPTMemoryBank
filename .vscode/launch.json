@@ -10,7 +10,7 @@
             "request": "launch",
             "module": "uvicorn",
             "args": [
-                "src.server.main:app",
+                "memorybank.server.main:app",
                 "--reload",
                 "--port",
                 "7000"

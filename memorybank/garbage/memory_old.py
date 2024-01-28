@@ -2,8 +2,8 @@ import collections
 from loguru import logger
 from fastapi import APIRouter, HTTPException, Query, Body
 from azure.storage.queue import QueueServiceClient
-from src.models.api import QueryRequest, QueryResponse
-from src.garbage.endpoint_models import QuestionResponse
+from memorybank.models.api import QueryRequest, QueryResponse
+from memorybank.garbage.endpoint_models import QuestionResponse
 from services.config import get_option
 from services import elasticsearch_utils as esutils
 

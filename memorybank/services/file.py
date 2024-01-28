@@ -9,7 +9,7 @@ import csv
 import pptx
 from loguru import logger
 
-from src.models.models import Document, DocumentMetadata
+from memorybank.models.models import Document, DocumentMetadata
 
 
 async def get_document_from_file(

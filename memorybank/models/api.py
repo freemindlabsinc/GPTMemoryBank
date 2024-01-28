@@ -1,4 +1,4 @@
-from src.models.models import (
+from memorybank.models.models import (
     Document,
     DocumentMetadataFilter,
     Query,

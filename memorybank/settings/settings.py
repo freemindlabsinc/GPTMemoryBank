@@ -3,6 +3,27 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 from pydantic import Field
 
+class ServiceSettings(BaseSettings):
+    class Config:
+        env_prefix = 'SERVICE_'
+        
+    name: str = Field(
+        None,
+        description="Name of the service. Example: 'Memory Bank'.")
+    
+    description: str = Field(
+        None,
+        description="Description of the service.")
+    
+    host: str = Field(
+        "0.0.0.0",
+        description="The ip the service will listen to. Example: 0.0.0.0"),
+    
+    port: int = Field(
+        8001,
+        description="Port to run the service. Example: 8001.")
+        
+
 class OpenAISettings(BaseSettings):
     class Config:
         env_prefix = 'OPENAI_'
@@ -98,6 +119,7 @@ class RedisSettings(BaseSettings):
     
 
 class AppSettings(BaseModel):
+    service: ServiceSettings
     openai: OpenAISettings
     azure_openai: AzureOpenAISettings
     elasticsearch: ElasticsearchSettings
@@ -106,13 +128,16 @@ class AppSettings(BaseModel):
 
 def load_app_settings_from_env() -> AppSettings:
     loaded = load_dotenv()  # Load environment variables from .env file
+        
     if not loaded:
+        # NOTE Possibly not a good idea in production
         raise Exception("Could not load .env file")
     
-    import os
-    key = os.getenv("OPENAI_API_KEY")
+    #import os
+    #key = os.getenv("OPENAI_API_KEY")
     
     settings = AppSettings(
+        service=ServiceSettings(),
         openai=OpenAISettings(),
         azure_openai=AzureOpenAISettings(),
         elasticsearch=ElasticsearchSettings(),

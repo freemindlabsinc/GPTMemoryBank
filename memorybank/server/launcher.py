@@ -4,7 +4,9 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from injector import Injector
 
-def setup_cors(app: FastAPI):
+from memorybank.settings.settings import AppSettings
+
+def _setup_cors(app: FastAPI):
     origins = ["*"]
     app.add_middleware(
         CORSMiddleware,
@@ -13,16 +15,16 @@ def setup_cors(app: FastAPI):
         allow_methods=["*"],
         allow_headers=["*"])    
     
-def setup_routers(app: FastAPI):    
-    from src.routers import memory, wellknown, resources
+def _setup_routers(app: FastAPI):    
+    from memorybank.routers import memory, wellknown, resources
 
     app.include_router(wellknown.router)
     app.include_router(memory.router)
     app.include_router(resources.router)
     
-def setup_openapi(app: FastAPI):
+def _setup_openapi(app: FastAPI):
     from fastapi.openapi.utils import get_openapi
-    from src.routers.wellknown import get_ai_plugin
+    from memorybank.routers.wellknown import get_ai_plugin
     
     def custom_openapi():
         if app.openapi_schema:
@@ -46,12 +48,17 @@ def create_app(root_injector: Injector) -> FastAPI:
         request.state.injector = root_injector
 
     app = FastAPI(dependencies=[Depends(bind_injector_to_request)])
-    setup_cors(app)
-    setup_routers(app)
-    setup_openapi(app)
+    _setup_cors(app)
+    _setup_routers(app)
+    _setup_openapi(app)
+        
+    cfg = root_injector.get(AppSettings)
         
     @app.get("/", include_in_schema=False)
     async def root():
-        return {"message": "Memory Bank API"}
+        return {
+            "name": cfg.service.name,
+            "description": cfg.service.description
+        }
     
     return app

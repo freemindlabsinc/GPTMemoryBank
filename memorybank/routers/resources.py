@@ -1,9 +1,9 @@
 from loguru import logger
-from src.services.file import get_document_from_file
+from memorybank.services.file import get_document_from_file
 from typing import Optional
 from fastapi import File, Form, HTTPException, Depends, Body, UploadFile
-from src.models.api import (UpsertRequest, UpsertResponse)
-from src.models.models import (DocumentMetadata, Source)
+from memorybank.models.api import (UpsertRequest, UpsertResponse)
+from memorybank.models.models import (DocumentMetadata, Source)
 from fastapi import APIRouter
 from typing import Optional, List
 
