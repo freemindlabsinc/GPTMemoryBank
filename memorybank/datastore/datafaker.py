@@ -1,11 +1,9 @@
-from loguru import logger
-from models.api import QueryResponse, QueryRequest, QueryResult
-from models.models import DocumentChunkMetadata, DocumentChunkWithScore
+from memorybank.models.api import QueryResult
+from memorybank.models.models import Document, DocumentChunk, DocumentChunkMetadata, DocumentChunkWithScore, DocumentMetadataFilter, Query, QueryWithEmbedding
+from abc import ABC, abstractmethod
+from typing import List
 
-async def get_datastore():
-    return None
-
-async def query(query: str, top_k: int = 3):
+def _fake_results() -> List[QueryResult]:
     res1 = QueryResult(
         query="Who is Alessandro Federici?", 
         results=[
@@ -22,7 +20,7 @@ async def query(query: str, top_k: int = 3):
                     )
                 )
         ])
-             
+            
     res2 = QueryResult(
         query="How old is Alessandro Federici?", 
         results=[
@@ -52,6 +50,5 @@ async def query(query: str, top_k: int = 3):
                     )
                 )
         ])
-             
-    return QueryResponse(results=[res1, res2])
-    
+            
+    return [res1, res2]

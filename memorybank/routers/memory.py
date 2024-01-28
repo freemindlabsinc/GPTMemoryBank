@@ -1,5 +1,6 @@
 from loguru import logger
-from fastapi import APIRouter, HTTPException, Depends, Body
+from fastapi import APIRouter, HTTPException, Depends, Body, Request
+from memorybank.datastore.datastore import DataStore
 from memorybank.models.api import (QueryResponse, QueryRequest, QueryResult)
 from memorybank.models.models import (DocumentChunkWithScore, DocumentChunkMetadata)
 
@@ -17,19 +18,17 @@ router = APIRouter(
     description="Accepts search query objects array each with query and optional filter. Break down complex questions into sub-questions. Refine results by criteria, e.g. time / source, don't do this often. Split queries if ResponseTooLargeError occurs.",
 )
 async def query(
-    request: QueryRequest = Body(...),
+    http_request: Request,
+    request: QueryRequest = Body(...),    
 ):
     try:        
-        #results = await datastore.query(
-        #    request.queries,
-        #)
-        res1 = QueryResult(
-            query="test", 
-            results=[DocumentChunkWithScore(score=0.0, text="test now", metadata=DocumentChunkMetadata())])
-                
-        return QueryResponse(results=[res1])
+        datastore = http_request.state.injector.get(DataStore)
+        results = await datastore.query(
+            request.queries,
+        )
+        return results
     except Exception as e:
-        #logger.error(e)
+        logger.error(e)
         raise HTTPException(status_code=500, detail="Internal Service Error")
     finally:
         logger.info(f"Query: {request.queries}")

@@ -1,5 +1,8 @@
 from injector import Injector
+from injector import Module, Injector, singleton
 from memorybank.settings.settings import AppSettings, load_app_settings_from_env
+from memorybank.datastore.datastore import DataStore
+from memorybank.datastore.providers.llamaindex import LlamaIndexDataStore
 
 def create_application_injector() -> Injector:
     _injector = Injector(auto_bind=True)
@@ -9,6 +12,7 @@ def create_application_injector() -> Injector:
     _injector.binder.bind(AppSettings, to=app_settings)
     
     # Services
+    _injector.binder.bind(DataStore, to=LlamaIndexDataStore, scope=singleton)
     
     return _injector
 
