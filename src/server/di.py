@@ -1,5 +1,5 @@
 from injector import Injector
-from src.settings import AppSettings, load_app_settings_from_env
+from src.settings.settings import AppSettings, load_app_settings_from_env
 
 def create_application_injector() -> Injector:
     _injector = Injector(auto_bind=True)
