@@ -1,4 +1,4 @@
-from models.models import (
+from src.models.models import (
     Document,
     DocumentMetadataFilter,
     Query,

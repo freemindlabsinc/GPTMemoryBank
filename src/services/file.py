@@ -9,7 +9,7 @@ import csv
 import pptx
 from loguru import logger
 
-from models.models import Document, DocumentMetadata
+from src.models.models import Document, DocumentMetadata
 
 
 async def get_document_from_file(
@@ -53,10 +53,7 @@ def extract_text_from_file(file: BufferedReader, mimetype: str) -> str:
     elif mimetype == "text/plain" or mimetype == "text/markdown":
         # Read text from plain text file
         extracted_text = file.read().decode("utf-8")
-    elif (
-        mimetype
-        == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ):
+    elif mimetype == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
         # Extract text from docx using docx2txt
         extracted_text = docx2txt.process(file)
     elif mimetype == "text/csv":
@@ -66,10 +63,7 @@ def extract_text_from_file(file: BufferedReader, mimetype: str) -> str:
         reader = csv.reader(decoded_buffer)
         for row in reader:
             extracted_text += " ".join(row) + "\n"
-    elif (
-        mimetype
-        == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-    ):
+    elif mimetype == "application/vnd.openxmlformats-officedocument.presentationml.presentation":
         # Extract text from pptx using python-pptx
         extracted_text = ""
         presentation = pptx.Presentation(file)
@@ -100,6 +94,7 @@ async def extract_text_from_form_file(file: UploadFile):
 
     temp_file_path = "/tmp/temp_file"
 
+    # AleF: added this to create the directory if it doesn't exist. I was getting an error.
     if not os.path.exists(os.path.dirname(temp_file_path)):
         os.makedirs(os.path.dirname(temp_file_path))
         
@@ -111,10 +106,10 @@ async def extract_text_from_form_file(file: UploadFile):
         extracted_text = extract_text_from_filepath(temp_file_path, mimetype)
     except Exception as e:
         logger.error(e)
-        os.remove(temp_file_path)
+        #os.remove(temp_file_path)
         raise e
-
-    # remove file from temp location
-    os.remove(temp_file_path)
+    finally:
+        # remove file from temp location
+        os.remove(temp_file_path)
 
     return extracted_text

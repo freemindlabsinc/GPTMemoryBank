@@ -1,14 +1,11 @@
-from fastapi import Depends, FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from uvicorn.config import HTTPProtocolType
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 #from dependencies import get_query_token, get_token_header
-from routers import memory, wellknown
+from src.routers import memory, wellknown, resources
 from fastapi.openapi.utils import get_openapi
-from routers.wellknown import get_ai_plugin
-from models.memory_models import (Message)
-from features import memory as mem
-from features import resources as res
+from src.routers.wellknown import get_ai_plugin
 
 app = FastAPI()#dependencies=[Depends(get_query_token)])
 
@@ -23,10 +20,7 @@ app.add_middleware(
 
 app.include_router(wellknown.router)
 app.include_router(memory.router)
-
-# Features
-app.mount("/memory", mem.memory_app)
-app.mount("/resources", res.resources_app)
+app.include_router(resources.router)
 
 def custom_openapi():
     if app.openapi_schema:

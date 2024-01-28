@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import asyncio
 from models.memory_models import (Message)
-from services.config import get_configured
+from services.config import get_option
 from services.logger import setup_logger
 from services.queue_utils import setup_queue, process_queue
 from elasticsearch import AsyncElasticsearch
@@ -19,8 +19,8 @@ from services import elasticsearch_utils as esutils
 
 
 # Get the Azure storage connection string and the save message queue from environment variables
-AZURE_STORAGE_CONNECTION_STRING = get_configured('AZURE_STORAGE_CONNECTION_STRING', is_required=True)
-SAVE_MESSAGE_QUEUE = get_configured('SAVE_MESSAGE_QUEUE', is_required=True)
+AZURE_STORAGE_CONNECTION_STRING = get_option('AZURE_STORAGE_CONNECTION_STRING', is_required=True)
+SAVE_MESSAGE_QUEUE = get_option('SAVE_MESSAGE_QUEUE', is_required=True)
 
 DELETE_QUEUE = False
 REMOVE_MESSAGES = True

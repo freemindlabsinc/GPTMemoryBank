@@ -15,7 +15,7 @@ def get_host(request: Request):
 
 def get_ai_plugin():
     currDir = os.getcwd()
-    with open(".well-known/ai-plugin.json", encoding="utf-8") as file:
+    with open("./src/.well-known/ai-plugin.json", encoding="utf-8") as file:
         return json.loads(file.read())
 
 @router.get("/openapi.yaml", include_in_schema=False)

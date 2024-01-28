@@ -1,6 +1,6 @@
 import os
 from elasticsearch import AsyncElasticsearch
-from services.config import get_configured
+from services.config import get_option
 from elasticsearch import AsyncElasticsearch
 import llama_index
 from llama_index import (ServiceContext, SimpleDirectoryReader, VectorStoreIndex, Document)
@@ -22,27 +22,27 @@ from llama_index.storage.index_store import RedisIndexStore
 from llama_index.llms import AzureOpenAI
 from llama_index.embeddings import AzureOpenAIEmbedding
 
-OPENAI_API_KEY = get_configured("OPENAI_API_KEY", is_required=True)
-OPENAI_CHAT_MODEL = get_configured("OPENAI_CHAT_MODEL", is_required=True)
-OPENAI_MODEL_TEMPERATURE = float(get_configured("OPENAI_MODEL_TEMPERATURE", 0.2))
-EMBEDDING_MODEL = get_configured("EMBEDDING_MODEL", is_required=True)
+OPENAI_API_KEY = get_option("OPENAI_API_KEY", is_required=True)
+OPENAI_CHAT_MODEL = get_option("OPENAI_CHAT_MODEL", is_required=True)
+OPENAI_MODEL_TEMPERATURE = float(get_option("OPENAI_MODEL_TEMPERATURE", 0.2))
+EMBEDDING_MODEL = get_option("EMBEDDING_MODEL", is_required=True)
 
-AZURE_OPENAI_API_KEY  = get_configured("AZURE_OPENAI_API_KEY", is_required=False)
-AZURE_OPENAI_ENDPOINT = get_configured("AZURE_OPENAI_ENDPOINT", is_required=False)
-AZURE_OPENAI_API_VERSION = get_configured("AZURE_OPENAI_API_VERSION", is_required=False)
-AZURE_OPENAI_CHAT_MODEL = get_configured("AZURE_OPENAI_CHAT_MODEL", is_required=False)
-AZURE_OPENAI_CHAT_DEPLOYMENT_NAME = get_configured("AZURE_OPENAI_CHAT_DEPLOYMENT_NAME", is_required=False)
-AZURE_OPENAI_EMBEDDING_MODEL = get_configured("AZURE_OPENAI_EMBEDDING_MODEL", is_required=False)
-AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME = get_configured("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME", is_required=False)
+AZURE_OPENAI_API_KEY  = get_option("AZURE_OPENAI_API_KEY", is_required=False)
+AZURE_OPENAI_ENDPOINT = get_option("AZURE_OPENAI_ENDPOINT", is_required=False)
+AZURE_OPENAI_API_VERSION = get_option("AZURE_OPENAI_API_VERSION", is_required=False)
+AZURE_OPENAI_CHAT_MODEL = get_option("AZURE_OPENAI_CHAT_MODEL", is_required=False)
+AZURE_OPENAI_CHAT_DEPLOYMENT_NAME = get_option("AZURE_OPENAI_CHAT_DEPLOYMENT_NAME", is_required=False)
+AZURE_OPENAI_EMBEDDING_MODEL = get_option("AZURE_OPENAI_EMBEDDING_MODEL", is_required=False)
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME = get_option("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME", is_required=False)
 
-REDIS_SERVER = get_configured("REDIS_SERVER", "localhost")
-REDIS_PORT = int(get_configured("REDIS_PORT", 6379))
+REDIS_SERVER = get_option("REDIS_SERVER", "localhost")
+REDIS_PORT = int(get_option("REDIS_PORT", 6379))
 
-ES_URL = get_configured("ES_URL", "https://localhost:9200")
-ES_CERTIFICATE_FINGERPRINT = get_configured("ES_CERTIFICATE_FINGERPRINT", is_required=True)
-ES_USERNAME = get_configured("ES_USERNAME", is_required=True)
-ES_PASSWORD = get_configured("ES_PASSWORD", is_required=True)
-ES_DEFAULT_INDEX = get_configured("ES_DEFAULT_INDEX", "default")
+ES_URL = get_option("ES_URL", "https://localhost:9200")
+ES_CERTIFICATE_FINGERPRINT = get_option("ES_CERTIFICATE_FINGERPRINT", is_required=True)
+ES_USERNAME = get_option("ES_USERNAME", is_required=True)
+ES_PASSWORD = get_option("ES_PASSWORD", is_required=True)
+ES_DEFAULT_INDEX = get_option("ES_DEFAULT_INDEX", "default")
 
 def create_elasticsearch_client() -> AsyncElasticsearch:
     # Instantiate the Elasticsearch client

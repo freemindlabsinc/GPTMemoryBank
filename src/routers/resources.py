@@ -1,19 +1,20 @@
-from services.file import get_document_from_file
+from loguru import logger
+from src.services.file import get_document_from_file
 from typing import Optional
-from fastapi import FastAPI, File, Form, HTTPException, Depends, Body, UploadFile
-from models.api import (QueryResponse, QueryRequest, QueryResult, UpsertRequest, UpsertResponse)
-from  models.models import (DocumentChunkWithScore, DocumentChunkMetadata, DocumentMetadata, Source)
+from fastapi import File, Form, HTTPException, Depends, Body, UploadFile
+from src.models.api import (UpsertRequest, UpsertResponse)
+from src.models.models import (DocumentMetadata, Source)
+from fastapi import APIRouter
+from typing import Optional, List
 
-resources_app = FastAPI(
-    title="Resources API",
-    description="An API to store resources in a memory bank.",
-    version="0.0.1",
-    servers=[{"url": "https://your-app-url.com"}],
+router = APIRouter(
+    prefix="/resources",
+    tags=["resources"],
     #dependencies=[Depends(validate_token)],
     )
 
 # ------------------------ Enpoint ------------------------
-@resources_app.post(
+@router.post(
     "/upsert-file",
     response_model=UpsertResponse,
 )
@@ -29,7 +30,7 @@ async def upsert_file(
         )
     except:
         metadata_obj = DocumentMetadata(source=Source.file)
-
+    
     document = await get_document_from_file(file, metadata_obj)
 
     try:
@@ -40,9 +41,11 @@ async def upsert_file(
     except Exception as e:
         #logger.error(e)
         raise HTTPException(status_code=500, detail=f"str({e})")
+    finally:
+        logger.info(f"Upsert_file: {document}")
 
 # ------------------------ Enpoint ------------------------
-@resources_app.post(
+@router.post(
     "/upsert",
     response_model=UpsertResponse,
 )
@@ -56,4 +59,8 @@ async def upsert(
     except Exception as e:
         #logger.error(e)
         raise HTTPException(status_code=500, detail="Internal Service Error")
+    finally:
+        logger.info(f"Upsert: {request}")
 
+ # ------------------------ Future enpoints ------------------------
+ # //upsert_from
