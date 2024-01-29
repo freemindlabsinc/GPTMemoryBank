@@ -1,8 +1,7 @@
 import os
 from elasticsearch import AsyncElasticsearch
-from services.config import get_option
+from memorybank.settings.settings import AppSettings, EmbeddingType
 from elasticsearch import AsyncElasticsearch
-import llama_index
 from llama_index import (ServiceContext, SimpleDirectoryReader, VectorStoreIndex, Document)
 from llama_index.llms import OpenAI
 from llama_index.llms import OpenAI
@@ -22,62 +21,61 @@ from llama_index.storage.index_store import RedisIndexStore
 from llama_index.llms import AzureOpenAI
 from llama_index.embeddings import AzureOpenAIEmbedding
 
-OPENAI_API_KEY = get_option("OPENAI_API_KEY", is_required=True)
-OPENAI_CHAT_MODEL = get_option("OPENAI_CHAT_MODEL", is_required=True)
-OPENAI_MODEL_TEMPERATURE = float(get_option("OPENAI_MODEL_TEMPERATURE", 0.2))
-EMBEDDING_MODEL = get_option("EMBEDDING_MODEL", is_required=True)
+import memorybank.server.di as di
 
-AZURE_OPENAI_API_KEY  = get_option("AZURE_OPENAI_API_KEY", is_required=False)
-AZURE_OPENAI_ENDPOINT = get_option("AZURE_OPENAI_ENDPOINT", is_required=False)
-AZURE_OPENAI_API_VERSION = get_option("AZURE_OPENAI_API_VERSION", is_required=False)
-AZURE_OPENAI_CHAT_MODEL = get_option("AZURE_OPENAI_CHAT_MODEL", is_required=False)
-AZURE_OPENAI_CHAT_DEPLOYMENT_NAME = get_option("AZURE_OPENAI_CHAT_DEPLOYMENT_NAME", is_required=False)
-AZURE_OPENAI_EMBEDDING_MODEL = get_option("AZURE_OPENAI_EMBEDDING_MODEL", is_required=False)
-AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME = get_option("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME", is_required=False)
+app_settings = di.global_injector.get(AppSettings)
 
-REDIS_SERVER = get_option("REDIS_SERVER", "localhost")
-REDIS_PORT = int(get_option("REDIS_PORT", 6379))
-
-ES_URL = get_option("ES_URL", "https://localhost:9200")
-ES_CERTIFICATE_FINGERPRINT = get_option("ES_CERTIFICATE_FINGERPRINT", is_required=True)
-ES_USERNAME = get_option("ES_USERNAME", is_required=True)
-ES_PASSWORD = get_option("ES_PASSWORD", is_required=True)
-ES_DEFAULT_INDEX = get_option("ES_DEFAULT_INDEX", "default")
-
-def create_elasticsearch_client() -> AsyncElasticsearch:
+def _create_elasticsearch_client() -> AsyncElasticsearch:
     # Instantiate the Elasticsearch client
     es_client = AsyncElasticsearch(
-        [ES_URL],
-        #ssl_assert_fingerprint=ES_CERTIFICATE_FINGERPRINT,
-        basic_auth=(ES_USERNAME, ES_PASSWORD),
+        [app_settings.elasticsearch.url],
+        #ssl_assert_fingerprint=app_settings.elasticsearch.certificate_fingerprint,
+        basic_auth=(app_settings.elasticsearch.username, app_settings.elasticsearch.password),
         verify_certs=False,        
     )
     es_client.options(headers={"user-agent": "memory-bank/0.0.1"})        
     
     return es_client
 
-def create_service_context() -> ServiceContext:
-    AZURE_OPENAI_API_KEY = None
-    if AZURE_OPENAI_API_KEY is not None:
-        llm = AzureOpenAI(
-        model=AZURE_OPENAI_CHAT_MODEL,
-        deployment_name=AZURE_OPENAI_CHAT_DEPLOYMENT_NAME,
-        api_key=AZURE_OPENAI_API_KEY,
-        azure_endpoint=AZURE_OPENAI_ENDPOINT,
-        api_version=AZURE_OPENAI_API_VERSION,
-        )
-        
-        embed_model = AzureOpenAIEmbedding(
-            model=AZURE_OPENAI_EMBEDDING_MODEL,
-            deployment_name=AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME,
-            api_key=AZURE_OPENAI_API_KEY,
-            azure_endpoint=AZURE_OPENAI_ENDPOINT,
-            api_version=AZURE_OPENAI_API_VERSION,
-        )
-    else:
-        llm = OpenAI(model=OPENAI_CHAT_MODEL, temperature=OPENAI_MODEL_TEMPERATURE)        
-        embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL)
+def _create_embedding_model():    
+    model_name = app_settings.embeddings.model
+    model_type = app_settings.embeddings.type
     
+    if model_type == EmbeddingType.huggingface:    
+        embed_model = HuggingFaceEmbedding(model_name=model_name)
+        
+    elif model_type == EmbeddingType.azureai:
+        embed_model = AzureOpenAIEmbedding(
+            model=app_settings.azure_openai.model,
+            deployment_name=app_settings.azure_openai.deployment_id,
+            api_key=app_settings.azure_openai.api_key,
+            azure_endpoint=app_settings.azure_openai.api_base,
+            api_version=app_settings.azure_openai.api_version,
+        )
+    else:        
+        # FIXME finish / instantiate OpenAI
+        raise Exception("Not supported embedding type fix me")
+    
+    return embed_model
+
+def _create_llm_service_context() -> ServiceContext:
+    if app_settings.azure_openai.api_key is not None:
+        ai_config = app_settings.azure_openai
+        llm = AzureOpenAI(
+            model=ai_config.model,
+            deployment_name=ai_config.deployment_id ,
+            api_key=ai_config.api_key,
+            azure_endpoint=ai_config.api_base,
+            api_version=ai_config.api_version,
+        )                
+    elif app_settings.openai.api_key is not None:
+        ai_config = app_settings.openai
+        
+        llm = OpenAI(model= ai_config.model, temperature=ai_config.temperature)                        
+    else:
+        raise Exception("No LLM API key provided")
+    
+    embed_model = _create_embedding_model()
     
     service_context = ServiceContext.from_defaults(
         # callback_manager=callback_manager, 
@@ -89,12 +87,12 @@ def create_service_context() -> ServiceContext:
 
 async def get_index() -> VectorStoreIndex:
     # Instantiate the Elasticsearch client
-    es_client = create_elasticsearch_client()    
-    service_context = create_service_context()
+    es_client = _create_elasticsearch_client()    
+    service_context = _create_llm_service_context()
     
     persist_directory = "./.persistDir"
     es_vector_store = ElasticsearchStore(
-        index_name=ES_DEFAULT_INDEX,
+        index_name=app_settings.elasticsearch.default_index,
         es_client=es_client,
     )
                               
@@ -107,9 +105,7 @@ async def get_index() -> VectorStoreIndex:
             docs, 
             service_context=service_context, 
             storage_context=storage_context, 
-            show_progress=True)
-        
-        index.
+            show_progress=True)            
         
         storage_context.persist(persist_dir=persist_directory)                
     else:

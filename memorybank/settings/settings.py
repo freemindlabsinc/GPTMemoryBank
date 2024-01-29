@@ -1,3 +1,4 @@
+from enum import Enum
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
@@ -116,10 +117,28 @@ class RedisSettings(BaseSettings):
     cache_collection: str = Field(
         "memorybankcache",
         description="Redis collection for cache. Example: 'memorybankcache'.")    
+
+class EmbeddingType(str, Enum):
+    azureai = "azureai"
+    openai = "openai"
+    huggingface = "huggingface"
+
+class EmbeddingsSettings(BaseSettings):
+    class Config:
+        env_prefix = 'EMBEDDINGS_'
     
+    type: EmbeddingType = Field(
+        EmbeddingType.huggingface,
+        description="Type of the embedding model. Default: 'huggingface'.")
+    
+    model: str = Field(
+        None,
+        description="Name of the embedding model. Example: 'HuggingFace'.")
+    pass    
 
 class AppSettings(BaseModel):
     service: ServiceSettings
+    embeddings: EmbeddingsSettings
     openai: OpenAISettings
     azure_openai: AzureOpenAISettings
     elasticsearch: ElasticsearchSettings
@@ -136,8 +155,10 @@ def load_app_settings_from_env() -> AppSettings:
     #import os
     #key = os.getenv("OPENAI_API_KEY")
     
+    # TODO it's probably unnecessary to instantiate them all here... investigate at some point
     settings = AppSettings(
         service=ServiceSettings(),
+        embeddings=EmbeddingsSettings(),
         openai=OpenAISettings(),
         azure_openai=AzureOpenAISettings(),
         elasticsearch=ElasticsearchSettings(),

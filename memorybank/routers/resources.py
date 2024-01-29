@@ -1,3 +1,4 @@
+from llama_index import Document
 from loguru import logger
 from memorybank.datastore.datastore import DataStore
 from memorybank.services.file import get_document_from_file
@@ -24,6 +25,13 @@ async def upsert_file(
     file: UploadFile = File(...),
     metadata: Optional[str] = Form(None),    
 ):
+    
+    doc = Document(file= file, metadata=metadata)
+    
+    from memorybank.services.elasticsearch_utils import get_index
+    index = await get_index()
+            
+        
     try:
         metadata_obj = (
             DocumentMetadata.parse_raw(metadata) # NOTE look into the depecated parse_raw        
