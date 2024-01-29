@@ -43,6 +43,7 @@ async def upsert_file(
 ):
     try:
         # FIXME: This is a hack to get the file converted in a llamaindex Document
+        # FIXME: This is a hack to get the file converted in a llamaindex Document
         tmp_dir = store_uploaded_file(file)        
         docs = SimpleDirectoryReader(tmp_dir).load_data()
         # create an md 5 hash of file.filename
@@ -78,6 +79,8 @@ async def upsert(
     http_request: Request,
     request: UpsertRequest = Body(...),
 ):
+    try:        
+        index = await get_vector_index(http_request)
     try:        
         index = await get_vector_index(http_request)
         
