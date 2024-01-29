@@ -89,7 +89,15 @@ class IndexFactory:
         
         return service_context
 
+    vector_store_index = None
     async def get_index(self) -> VectorStoreIndex:
+        if self.vector_store_index is None:
+            self.vector_store_index = await self._get_index()
+        
+        return self.vector_store_index
+        
+
+    async def _get_index(self) -> VectorStoreIndex:
         # Instantiate the Elasticsearch client
         es_client = self._create_elasticsearch_client()    
         service_context = self._create_llm_service_context()

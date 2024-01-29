@@ -1,3 +1,5 @@
+import hashlib
+import shutil
 from injector import Injector
 from llama_index import Document, VectorStoreIndex
 from loguru import logger
@@ -20,6 +22,15 @@ router = APIRouter(
     #dependencies=[Depends(validate_token)],
     )
 
+
+async def get_vector_index(http_request: Request) -> VectorStoreIndex:
+    injector = http_request.state.injector
+    indexFactory = injector.get(IndexFactory)
+    
+    index = await indexFactory.get_index() 
+    
+    return index
+
 # ------------------------ Enpoint ------------------------
 @router.post(
     "/upsert-file",
@@ -31,12 +42,18 @@ async def upsert_file(
     metadata: Optional[str] = Form(None),    
 ):
     try:
+        # FIXME: This is a hack to get the file converted in a llamaindex Document
         tmp_dir = store_uploaded_file(file)        
         docs = SimpleDirectoryReader(tmp_dir).load_data()
+        # create an md 5 hash of file.filename
+        hash = hashlib.md5(file.filename.encode('utf-8')).hexdigest()        
+        docs[0].doc_id = "DOC_" + hash
+        docs[0].id_ = "DOC_" + hash
         
-        index = await get_vector_index(http_request)    
-                             
-        res = index.insert(docs[0])
+        # Gets the veftor index (more in the futurte)
+        index = await get_vector_index(http_request)                                 
+        #res = index.insert(docs[0])
+        res = index.refresh_ref_docs(docs)
                 
         return UpsertResponse(ids=[docs[0].doc_id])
      
@@ -44,15 +61,10 @@ async def upsert_file(
         logger.error(e)
         raise HTTPException(status_code=500, detail=f"str({e})")
     
-    finally:
-        xx = file.filename
-        logger.info(f"Upsert_file: {xx}")
-
-async def get_vector_index(http_request: Request) -> VectorStoreIndex:
-    injector = http_request.state.injector
-    indexFactory = injector.get(IndexFactory)
-    index = await indexFactory.get_index() 
-    return index
+    finally:  
+        #os.remove(tmp_dir)     
+        shutil.rmtree(tmp_dir) 
+        logger.info(f"Upsert_file: {file.filename}")
 
 # ------------------------ Enpoint ------------------------
 @router.post(
@@ -63,10 +75,10 @@ async def upsert(
     http_request: Request,
     request: UpsertRequest = Body(...),
 ):
-    try:
-        index = get_vector_index(http_request)
+    try:        
+        index = await get_vector_index(http_request)
         
-        ids = await index.insert(request.documents)
+        ids = index.insert(request.documents)
         
         return UpsertResponse(ids=ids)
     
