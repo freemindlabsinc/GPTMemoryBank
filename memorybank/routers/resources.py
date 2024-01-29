@@ -81,8 +81,6 @@ async def upsert(
 ):
     try:        
         index = await get_vector_index(http_request)
-    try:        
-        index = await get_vector_index(http_request)
         
         ids = []
         for doc in request.documents:
