@@ -1,5 +1,3 @@
-.persistDir/.persist
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -163,7 +161,4 @@ cython_debug/
 
 .vs
 docs/.$Architecture.drawio.dtmp
-/.persistDir/docstore.json
-/.persistDir/graph_store.json
-/.persistDir/image__vector_store.json
-/.persistDir/index_store.json
+/.persistDir/

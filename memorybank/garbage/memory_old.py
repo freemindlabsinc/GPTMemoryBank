@@ -5,7 +5,7 @@ from azure.storage.queue import QueueServiceClient
 from memorybank.models.api import QueryRequest, QueryResponse
 from memorybank.garbage.endpoint_models import QuestionResponse
 from services.config import get_option
-from services import elasticsearch_utils as esutils
+from memorybank.services import indexUtils as esutils
 
 # Retrieve environment variables for Azure Storage and Queue names
 AZURE_STORAGE_CONNECTION_STRING = get_option('AZURE_STORAGE_CONNECTION_STRING', is_required=True)

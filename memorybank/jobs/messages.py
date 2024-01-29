@@ -15,7 +15,7 @@ from llama_index.llms import OpenAI
 from llama_index.embeddings import HuggingFaceEmbedding    
 from llama_index.vector_stores import ElasticsearchStore
 from llama_index.storage.storage_context import StorageContext
-from services import elasticsearch_utils as esutils
+from memorybank.services import indexUtils as esutils
 
 
 # Get the Azure storage connection string and the save message queue from environment variables

@@ -1,4 +1,5 @@
-from llama_index import Document
+from injector import Injector
+from llama_index import Document, VectorStoreIndex
 from loguru import logger
 from memorybank.datastore.datastore import DataStore
 from memorybank.services.file import get_document_from_file
@@ -8,6 +9,10 @@ from memorybank.models.api import (UpsertRequest, UpsertResponse)
 from memorybank.models.models import (DocumentMetadata, Source)
 from fastapi import APIRouter
 from typing import Optional, List
+from llama_index import SimpleDirectoryReader
+import os                
+from memorybank.services.indexUtils import IndexFactory
+from memorybank.services.fileuploads import store_uploaded_file
 
 router = APIRouter(
     prefix="/resources",
@@ -25,37 +30,29 @@ async def upsert_file(
     file: UploadFile = File(...),
     metadata: Optional[str] = Form(None),    
 ):
-    
-    doc = Document(file= file, metadata=metadata)
-    
-    from memorybank.services.elasticsearch_utils import get_index
-    index = await get_index()
-            
-        
     try:
-        metadata_obj = (
-            DocumentMetadata.parse_raw(metadata) # NOTE look into the depecated parse_raw        
-            if metadata
-            else DocumentMetadata(source=Source.file)
-        )
-    except Exception as e:
-        metadata_obj = DocumentMetadata(source=Source.file)
-    
-    document = await get_document_from_file(file, metadata_obj)
-
-    try:
-        datastore = http_request.state.injector.get(DataStore)
+        tmp_dir = store_uploaded_file(file)        
+        docs = SimpleDirectoryReader(tmp_dir).load_data()
         
-        ids = await datastore.upsert([document])
-        
-        return UpsertResponse(ids=ids)       
+        index = await get_vector_index(http_request)    
+                             
+        res = index.insert(docs[0])
+                
+        return UpsertResponse(ids=[docs[0].doc_id])
      
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=f"str({e})")
     
     finally:
-        logger.info(f"Upsert_file: {document}")
+        xx = file.filename
+        logger.info(f"Upsert_file: {xx}")
+
+async def get_vector_index(http_request: Request) -> VectorStoreIndex:
+    injector = http_request.state.injector
+    indexFactory = injector.get(IndexFactory)
+    index = await indexFactory.get_index() 
+    return index
 
 # ------------------------ Enpoint ------------------------
 @router.post(
@@ -67,8 +64,9 @@ async def upsert(
     request: UpsertRequest = Body(...),
 ):
     try:
-        datastore = http_request.state.injector.get(DataStore)
-        ids = await datastore.upsert(request.documents)
+        index = get_vector_index(http_request)
+        
+        ids = await index.insert(request.documents)
         
         return UpsertResponse(ids=ids)
     
