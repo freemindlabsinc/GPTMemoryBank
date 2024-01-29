@@ -6,12 +6,30 @@ from typing import Dict, List, Optional
 from injector import Injector, inject
 from memorybank.services.openai import get_embeddings
 from memorybank.settings.settings import AppSettings
+from memorybank.datastore.datastore import DataStore
 
 class DataStore(ABC):
     @inject
-    def __init__(self, app_settings: AppSettings):
+    def __init__(self, app_settings: AppSettings, document_store: DataStore):
         self.app_settings = app_settings
+        self.document_store = document_store
         pass
+    
+    async def query(self, queries: List[Query]) -> List[QueryResult]:
+        """
+        Takes in a list of queries and filters and returns a list of query results with matching document chunks and scores.
+        """
+        value = self.app_settings
+        # get a list of of just the queries from the Query list
+        query_texts = [query.query for query in queries]
+        query_embeddings = [] #get_embeddings(query_texts)
+        query_embeddings.append([0.1, 0.2, 0.3])
+        # hydrate the queries with embeddings
+        queries_with_embeddings = [
+            QueryWithEmbedding(**query.dict(), embedding=embedding)
+            for query, embedding in zip(queries, query_embeddings)
+        ]
+        return await self._query(queries_with_embeddings)
     
     async def upsert(self, 
                      documents: List[Document], 
@@ -35,26 +53,12 @@ class DataStore(ABC):
             ]
         )
 
-        #chunks = get_document_chunks(documents, chunk_token_size)
+        self.document_store.upsert(documents)
+        # FIXME this is to be fixed        
+        # chunks = get_document_chunks(documents, chunk_token_size)
 
         #return await self._upsert(chunks)
-        return []
-        
-    async def query(self, queries: List[Query]) -> List[QueryResult]:
-        """
-        Takes in a list of queries and filters and returns a list of query results with matching document chunks and scores.
-        """
-        value = self.app_settings
-        # get a list of of just the queries from the Query list
-        query_texts = [query.query for query in queries]
-        query_embeddings = [] #get_embeddings(query_texts)
-        query_embeddings.append([0.1, 0.2, 0.3])
-        # hydrate the queries with embeddings
-        queries_with_embeddings = [
-            QueryWithEmbedding(**query.dict(), embedding=embedding)
-            for query, embedding in zip(queries, query_embeddings)
-        ]
-        return await self._query(queries_with_embeddings)
+        return []            
     
     @abstractmethod
     async def _upsert(self, chunks: Dict[str, List[DocumentChunk]]) -> List[str]:

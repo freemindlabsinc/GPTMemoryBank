@@ -23,15 +23,18 @@ async def query(
 ):
     try:        
         datastore = http_request.state.injector.get(DataStore)
+        
         results = await datastore.query(
             request.queries,
         )
         
         response = QueryResponse(results=results)
         return response
+    
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail="Internal Service Error")
+    
     finally:
         logger.info(f"Query: {request.queries}")
  

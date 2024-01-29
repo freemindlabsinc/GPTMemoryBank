@@ -1,7 +1,8 @@
 from loguru import logger
+from memorybank.datastore.datastore import DataStore
 from memorybank.services.file import get_document_from_file
 from typing import Optional
-from fastapi import File, Form, HTTPException, Depends, Body, UploadFile
+from fastapi import File, Form, HTTPException, Depends, Body, UploadFile, Request
 from memorybank.models.api import (UpsertRequest, UpsertResponse)
 from memorybank.models.models import (DocumentMetadata, Source)
 from fastapi import APIRouter
@@ -19,28 +20,32 @@ router = APIRouter(
     response_model=UpsertResponse,
 )
 async def upsert_file(
+    http_request: Request,
     file: UploadFile = File(...),
-    metadata: Optional[str] = Form(None),
+    metadata: Optional[str] = Form(None),    
 ):
     try:
         metadata_obj = (
-            DocumentMetadata.parse_raw(metadata)
+            DocumentMetadata.parse_raw(metadata) # NOTE look into the depecated parse_raw        
             if metadata
             else DocumentMetadata(source=Source.file)
         )
-    except:
+    except Exception as e:
         metadata_obj = DocumentMetadata(source=Source.file)
     
     document = await get_document_from_file(file, metadata_obj)
 
     try:
-        #ids = await datastore.upsert([document])
-        ids = ["0001", "0002"]
-        return UpsertResponse(ids=ids)
-        pass
+        datastore = http_request.state.injector.get(DataStore)
+        
+        ids = await datastore.upsert([document])
+        
+        return UpsertResponse(ids=ids)       
+     
     except Exception as e:
-        #logger.error(e)
+        logger.error(e)
         raise HTTPException(status_code=500, detail=f"str({e})")
+    
     finally:
         logger.info(f"Upsert_file: {document}")
 
@@ -50,15 +55,19 @@ async def upsert_file(
     response_model=UpsertResponse,
 )
 async def upsert(
+    http_request: Request,
     request: UpsertRequest = Body(...),
 ):
     try:
-        #ids = await datastore.upsert(request.documents)
-        ids = ["0001", "0002"]        
+        datastore = http_request.state.injector.get(DataStore)
+        ids = await datastore.upsert(request.documents)
+        
         return UpsertResponse(ids=ids)
+    
     except Exception as e:
-        #logger.error(e)
+        logger.error(e)
         raise HTTPException(status_code=500, detail="Internal Service Error")
+    
     finally:
         logger.info(f"Upsert: {request}")
 
