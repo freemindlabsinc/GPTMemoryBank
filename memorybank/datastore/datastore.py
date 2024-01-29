@@ -4,17 +4,13 @@ from memorybank.models.models import Document, DocumentChunk, DocumentChunkMetad
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
 from injector import Injector, inject
-from memorybank.services.openai import get_embeddings
 from memorybank.settings.settings import AppSettings
-from memorybank.datastore.datastore import DataStore
 
 class DataStore(ABC):
     @inject
-    def __init__(self, app_settings: AppSettings, document_store: DataStore):
+    def __init__(self, app_settings: AppSettings):
         self.app_settings = app_settings
-        self.document_store = document_store
-        pass
-    
+        
     async def query(self, queries: List[Query]) -> List[QueryResult]:
         """
         Takes in a list of queries and filters and returns a list of query results with matching document chunks and scores.
@@ -22,6 +18,8 @@ class DataStore(ABC):
         value = self.app_settings
         # get a list of of just the queries from the Query list
         query_texts = [query.query for query in queries]
+        
+        # TODO needs ab abstraction for embeddings
         query_embeddings = [] #get_embeddings(query_texts)
         query_embeddings.append([0.1, 0.2, 0.3])
         # hydrate the queries with embeddings
@@ -53,11 +51,10 @@ class DataStore(ABC):
             ]
         )
 
-        self.document_store.upsert(documents)
         # FIXME this is to be fixed        
         # chunks = get_document_chunks(documents, chunk_token_size)
 
-        #return await self._upsert(chunks)
+        return await self._upsert(chunks)
         return []            
     
     @abstractmethod

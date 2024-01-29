@@ -109,6 +109,8 @@ async def get_index() -> VectorStoreIndex:
             storage_context=storage_context, 
             show_progress=True)
         
+        index.
+        
         storage_context.persist(persist_dir=persist_directory)                
     else:
         storage_context = StorageContext.from_defaults(
