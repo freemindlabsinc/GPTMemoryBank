@@ -62,8 +62,12 @@ class IndexFactory:
         return embed_model
     
     
-    def _create_llm_service_context(self) -> ServiceContext:
-        if self.app_settings.azure_openai.api_key is not None:
+    def _create_llm_service_context(self) -> ServiceContext:        
+        if self.app_settings.openai.api_key is not None:
+            ai_config = self.app_settings.openai
+            
+            llm = OpenAI(model= ai_config.model, temperature=ai_config.temperature)                                
+        elif self.app_settings.azure_openai.api_key is not None:
             ai_config = self.app_settings.azure_openai
             llm = AzureOpenAI(
                 model=ai_config.model,
@@ -72,12 +76,8 @@ class IndexFactory:
                 azure_endpoint=ai_config.api_base,
                 api_version=ai_config.api_version,
             )                
-        elif self.app_settings.openai.api_key is not None:
-            ai_config = self.app_settings.openai
-            
-            llm = OpenAI(model= ai_config.model, temperature=ai_config.temperature)                        
         else:
-            raise Exception("No LLM API key provided")
+            raise Exception("No LLM API key provided")       
         
         embed_model = self._create_embedding_model()
         

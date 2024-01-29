@@ -1,14 +1,25 @@
+from llama_index import VectorStoreIndex
 from loguru import logger
 from fastapi import APIRouter, HTTPException, Depends, Body, Request
 from memorybank.datastore.datastore import DataStore
 from memorybank.models.api import (QueryResponse, QueryRequest, QueryResult)
 from memorybank.models.models import (DocumentChunkWithScore, DocumentChunkMetadata)
+from memorybank.services.indexUtils import IndexFactory
 
 router = APIRouter(
     prefix="/memory",
     tags=["memory"],
     #dependencies=[Depends(validate_token)],
     )
+
+# -- to centralize ---
+async def get_vector_index(http_request: Request) -> VectorStoreIndex:
+    injector = http_request.state.injector
+    indexFactory = injector.get(IndexFactory)
+    
+    index = await indexFactory.get_index() 
+    
+    return index
 
 # ------------------------ Enpoint ------------------------
 @router.post(
@@ -22,11 +33,27 @@ async def query(
     request: QueryRequest = Body(...),    
 ):
     try:        
-        datastore = http_request.state.injector.get(DataStore)
+        index = await get_vector_index(http_request) 
+        query_engine = index.as_query_engine()
         
-        results = await datastore.query(
-            request.queries,
-        )
+        results = []
+        for qry in request.queries:                        
+            response = query_engine.query(qry.query)
+            
+            srcs = []
+            for x in response.source_nodes:
+                y =  DocumentChunkWithScore(
+                        text=response.response,
+                        score=1,                                                
+                        metadata=DocumentChunkMetadata()
+                )
+                srcs.append(y)
+            
+            result = QueryResult(
+                query=qry.query,
+                results = srcs)
+            
+            results.append(result)
         
         response = QueryResponse(results=results)
         return response
@@ -41,3 +68,5 @@ async def query(
  # ------------------------ Future enpoints ------------------------
  # /summarize
  # /chat
+ 
+ 

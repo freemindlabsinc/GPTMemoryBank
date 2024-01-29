@@ -22,7 +22,7 @@ router = APIRouter(
     #dependencies=[Depends(validate_token)],
     )
 
-
+# -- to centralize ---
 async def get_vector_index(http_request: Request) -> VectorStoreIndex:
     injector = http_request.state.injector
     indexFactory = injector.get(IndexFactory)
