@@ -9,7 +9,7 @@ def create_application_injector() -> Injector:
     
     # Settings
     app_settings = load_app_settings_from_env()
-    _injector.binder.bind(AppSettings, to=app_settings)
+    _injector.binder.bind(AppSettings, to=app_settings, scope=singleton)
     
     # Services
     _injector.binder.bind(DataStore, to=LlamaIndexDataStore, scope=singleton)
