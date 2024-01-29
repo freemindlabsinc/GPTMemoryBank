@@ -3,10 +3,16 @@ from memorybank.models.api import QueryResult
 from memorybank.models.models import Document, DocumentChunk, DocumentChunkMetadata, DocumentChunkWithScore, DocumentMetadataFilter, Query, QueryWithEmbedding
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
-
+from injector import Injector, inject
 from memorybank.services.openai import get_embeddings
+from memorybank.settings.settings import AppSettings
 
 class DataStore(ABC):
+    @inject
+    def __init__(self, app_settings: AppSettings):
+        self.app_settings = app_settings
+        pass
+    
     async def upsert(self, 
                      documents: List[Document], 
                      chunk_token_size: Optional[int] = None) -> List[str]:
@@ -38,9 +44,11 @@ class DataStore(ABC):
         """
         Takes in a list of queries and filters and returns a list of query results with matching document chunks and scores.
         """
+        value = self.app_settings
         # get a list of of just the queries from the Query list
         query_texts = [query.query for query in queries]
-        query_embeddings = get_embeddings(query_texts)
+        query_embeddings = [] #get_embeddings(query_texts)
+        query_embeddings.append([0.1, 0.2, 0.3])
         # hydrate the queries with embeddings
         queries_with_embeddings = [
             QueryWithEmbedding(**query.dict(), embedding=embedding)
@@ -77,4 +85,3 @@ class DataStore(ABC):
         Returns whether the operation was successful.
         """
         raise NotImplementedError
-    

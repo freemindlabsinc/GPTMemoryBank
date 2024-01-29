@@ -11,7 +11,7 @@ def _fake_results() -> List[QueryResult]:
                 score=1.0, 
                 text="Alessandro Federici is the developer who created this project.", 
                 metadata=DocumentChunkMetadata(
-                    source="",
+                    source="chat",
                     source_id="",
                     url = "",
                     created_at="1/1/2023",                    
@@ -28,7 +28,7 @@ def _fake_results() -> List[QueryResult]:
                 score=1.0, 
                 text="Alessandro Federici is 48.", 
                 metadata=DocumentChunkMetadata(
-                    source="",
+                    source="email",
                     source_id="",
                     url = "",
                     created_at="2/2/2022",
@@ -41,7 +41,7 @@ def _fake_results() -> List[QueryResult]:
                 score=1.0, 
                 text="Alessandro Federici is 47.", 
                 metadata=DocumentChunkMetadata(
-                    source="",
+                    source="chat",
                     source_id="",
                     url = "",
                     created_at="1/3/2024",
