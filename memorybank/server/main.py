@@ -1,16 +1,14 @@
 import llama_index
 
-from memorybank.server.di import global_injector
-from memorybank.server.launcher import create_app
+from memorybank.server.di import setup_services
+from memorybank.server.appbuilder import create_app
 
 # Add LlamaIndex simple observability
 llama_index.set_global_handler("simple")
 
-# Setup dependency injection
-injector = global_injector
-
 # Create the FastAPI application
-app = create_app(injector)
+app_injector = setup_services()
+app = create_app(app_injector)
 
 #if __name__ == "__main__":
 #    import uvicorn
