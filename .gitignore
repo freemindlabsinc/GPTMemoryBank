@@ -161,4 +161,5 @@ cython_debug/
 
 .vs
 docs/.$Architecture.drawio.dtmp
-src/.persistDir/
+/.persistDir/
+/.vscode/
