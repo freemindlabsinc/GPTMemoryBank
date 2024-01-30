@@ -69,10 +69,10 @@ async def upsert_file(
 
 # ------------------------ Enpoint ------------------------
 @router.post(
-    "/upsert",
+    "/upsert-docs",
     response_model=UpsertResponse,
 )
-async def upsert(
+async def upsert_docs(
     http_request: Request,
     request: UpsertRequest = Body(...),
 ):
@@ -83,8 +83,8 @@ async def upsert(
         for doc in request.documents:
             hash = hashlib.md5(doc.id.encode('utf-8')).hexdigest()        
             newDoc = Document(
-                doc_id = "DOC_" + hash,
-                text = doc.text,
+                doc_id = "MSG_" + hash,
+                text = doc.text,                
             )
             
             res = index.refresh_ref_docs([newDoc])            
@@ -100,3 +100,44 @@ async def upsert(
 
  # ------------------------ Future enpoints ------------------------
  # //upsert_from
+ 
+ # write a version of upsert that takes an array of files
+
+# ------------------------ Enpoint ------------------------
+@router.post(
+    "/upsert-from",
+    response_model=UpsertResponse,
+)
+def upsert_from(
+    http_request: Request,
+    urls: List[str] = File(...),
+    metadata: Optional[str] = Form(None),    
+):
+    return UpsertResponse(ids=["NotImplementedYet"])
+
+# ------------------------ Enpoint ------------------------
+@router.post(
+    "/upsert-many",
+    response_model=UpsertResponse,
+)
+async def upsert_many(
+    http_request: Request,
+    files: List[UploadFile] = File(...),
+    metadata: Optional[str] = Form(None),    
+):
+    ids = []
+    for file in files:
+        logger.info(f"Upserting file: {file.filename}")
+        resp = await upsert_file(http_request, file, metadata)
+        for id in resp.ids:
+            ids.append(id)
+        
+    return UpsertResponse(ids=ids)
+    
+# ------------------------ Enpoint ------------------------
+@router.delete(
+    "/",    
+    response_model=UpsertResponse,
+)
+def delete(document_ids: List[str]):
+    return UpsertResponse(ids=["NotImplementedYet"])
