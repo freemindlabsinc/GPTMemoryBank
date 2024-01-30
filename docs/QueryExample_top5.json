@@ -1,0 +1,66 @@
+{
+  "results": [
+    {
+      "query": "what is carbon?",
+      "answer": "Carbon is a chemical element with the symbol C and atomic number 6. It is a nonmetallic element that belongs to group 14 of the periodic table. Carbon has the ability to form covalent chemical bonds and is known for its diverse allotropes, including graphite, diamond, amorphous carbon, and fullerenes. It is the 15th most abundant element in the Earth's crust and the fourth most abundant element in the universe. Carbon is also an essential element for all known life forms and is the second most abundant element in the human body after oxygen. It has a wide range of physical and chemical properties, making it a versatile element with numerous applications.",
+      "formatted_sources": "> Source (Doc id: 148c029d-317c-4c36-94d7-1f58fc26339c): Carbon (from Latin carbo 'coal') is a chemical element with the symbol C and atomic number 6. It ...",
+      "links": [
+        {
+          "id": null,
+          "text": "Carbon (from Latin carbo 'coal') is a chemical element with the symbol C and atomic number 6. It is nonmetallic and tetravalent—its atom making four electrons available to form covalent chemical bonds. It belongs to group 14 of the periodic table.[14] Carbon makes up about 0.025 percent of Earth's crust.[15] Three isotopes occur naturally, 12C and 13C being stable, while 14C is a radionuclide, decaying with a half-life of about 5,730 years.[16] Carbon is one of the few elements known since antiquity.[17]\n\nCarbon is the 15th most abundant element in the Earth's crust, and the fourth most abundant element in the universe by mass after hydrogen, helium, and oxygen. Carbon's abundance, its unique diversity of organic compounds, and its unusual ability to form polymers at the temperatures commonly encountered on Earth, enables this element to serve as a common element of all known life. It is the second most abundant element in the human body by mass (about 18.5%) after oxygen.[18]\n\nThe atoms of carbon can bond together in diverse ways, resulting in various allotropes of carbon. Well-known allotropes include graphite, diamond, amorphous carbon, and fullerenes. The physical properties of carbon vary widely with the allotropic form. For example, graphite is opaque and black, while diamond is highly transparent. Graphite is soft enough to form a streak on paper (hence its name, from the Greek verb \"γράφειν\" which means \"to write\"), while diamond is the hardest naturally occurring material known. Graphite is a good electrical conductor while diamond has a low electrical conductivity. Under normal conditions, diamond, carbon nanotubes, and graphene have the highest thermal conductivities of all known materials. All carbon allotropes are solids under normal conditions, with graphite being the most thermodynamically stable form at standard temperature and pressure. They are chemically resistant and require high temperature to react even with oxygen.\n\nThe most common oxidation state of carbon in inorganic compounds is +4, while +2 is found in carbon monoxide and transition metal carbonyl complexes. The largest sources of inorganic carbon are limestones, dolomites and carbon dioxide, but significant quantities occur in organic deposits of coal, peat, oil, and methane clathrates. Carbon forms a vast number of compounds, with about two hundred million having been described and indexed;[19] and yet that number is but a fraction of the number of theoretically possible compounds under standard conditions.\n\nThe allotropes of carbon include graphite, one of the softest known substances, and diamond, the hardest naturally occurring substance. It bonds readily with other small atoms, including other carbon atoms, and is capable of forming multiple stable covalent bonds with suitable multivalent atoms. Carbon is a component element in the large majority of all chemical compounds, with about two hundred million examples having been described in the published chemical literature.[19] Carbon also has the highest sublimation point of all elements. At atmospheric pressure it has no melting point, as its triple point is at 10.8 ± 0.2 megapascals (106.6 ± 2.0 atm; 1,566 ± 29 psi) and 4,600 ± 300 K (4,330 ± 300 °C; 7,820 ± 540 °F),[3][4] so it sublimes at about 3,900 K (3,630 °C; 6,560 °F).[21][22] Graphite is much more reactive than diamond at standard conditions, despite being more thermodynamically stable, as its delocalised pi system is much more vulnerable to attack. For example, graphite can be oxidised by hot concentrated nitric acid at standard conditions to mellitic acid, C6(CO2H)6, which preserves the hexagonal units of graphite while breaking up the larger structure.[23]\n\nCarbon sublimes in a carbon arc, which has a temperature of about 5800 K (5,530 °C or 9,980 °F). Thus, irrespective of its allotropic form, carbon remains solid at higher temperatures than the highest-melting-point metals such as tungsten or rhenium. Although thermodynamically prone to oxidation, carbon resists oxidation more effectively than elements such as iron and copper, which are weaker reducing agents at room temperature.\n\nCarbon is the sixth element, with a ground-state electron configuration of 1s22s22p2, of which the four outer electrons are valence electrons.",
+          "metadata": {
+            "source": "file",
+            "source_id": "148c029d-317c-4c36-94d7-1f58fc26339c",
+            "url": "file1-Wikipedia-Carbon.txt",
+            "created_at": "2024-01-30 17:04:06",
+            "author": "",
+            "document_id": "DOC_fd9bb1f6b626d437d9269cb5ebb636be",
+            "start_char_idx": 0,
+            "end_char_idx": 4296
+          },
+          "embedding": null,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "query": "what dop you know of the moon?",
+      "answer": "The Moon is Earth's only natural satellite. It has a diameter that is about one-quarter the size of Earth and is the fifth largest satellite in the Solar System. It is larger than all known dwarf planets in the Solar System. The Moon is a planetary-mass object with a rocky body. It lacks any significant atmosphere, hydrosphere, or magnetic field. The Moon orbits Earth at an average distance of 384,400 km and its gravitational influence is the main driver of Earth's tides. The Moon's orbit around Earth has a sidereal period of 27.3 days and during each synodic period of 29.5 days, the amount of the Moon's Earth-facing surface that is illuminated by the Sun varies, resulting in lunar phases. The Moon is tidally locked to Earth, meaning the same side always faces Earth. Due to cyclical shifts in perspective, 59% of the lunar surface is visible from Earth.",
+      "formatted_sources": "> Source (Doc id: e9cb5620-d05a-4c3e-ae7b-e50aa7cf562f): The Moon is Earth's only natural satellite. Its diameter is about one-quarter of Earth's (compara...\n\n> Source (Doc id: bcecd220-9a74-4b6d-85c8-1a012eb4774d): Teams are currently conducting the Þrst in a series of tests in the  PaciÞc Ocean to demonstrate ...",
+      "links": [
+        {
+          "id": null,
+          "text": "The Moon is Earth's only natural satellite. Its diameter is about one-quarter of Earth's (comparable to the width of Australia),[17] making it the fifth largest satellite in the Solar System and the largest and most massive relative to its parent planet. It is larger than all known dwarf planets in the Solar System.[18] The Moon is a planetary-mass object with a differentiated rocky body, making it a satellite planet under the geophysical definitions of the term. It lacks any significant atmosphere, hydrosphere, or magnetic field. Its surface gravity is about one-sixth of Earth's at 0.1654 g—Jupiter's moon Io is the only satellite in the Solar System known to have a higher surface gravity and density.\n\nThe Moon orbits Earth at an average distance of 384,400 km (238,900 mi), or about 30 times Earth's diameter. Its gravitational influence is the main driver of Earth's tides and very slowly lengthens Earth's day. The Moon's orbit around Earth has a sidereal period of 27.3 days. During each synodic period of 29.5 days, the amount of the Moon's Earth-facing surface that is illuminated by the Sun varies from none up to nearly 100%, resulting in lunar phases that form the basis for the months of a lunar calendar.[19] The Moon is tidally locked to Earth, which means that the length of a full rotation of the Moon on its own axis causes its same side (the near side) to always face Earth, and the somewhat longer lunar day is the same as the synodic period. Due to cyclical shifts in perspective (libration), 59% of the lunar surface is visible from Earth.",
+          "metadata": {
+            "source": "file",
+            "source_id": "e9cb5620-d05a-4c3e-ae7b-e50aa7cf562f",
+            "url": "file2-Wikipedia-Moon.txt",
+            "created_at": "2024-01-30 17:04:10",
+            "author": "",
+            "document_id": "DOC_d4adf663556972ddadefd4a60908a8a0",
+            "start_char_idx": 0,
+            "end_char_idx": 1568
+          },
+          "embedding": null,
+          "score": 1
+        },
+        {
+          "id": null,
+          "text": "Teams are currently conducting the Þrst in a series of tests in the  PaciÞc Ocean to demonstrate and\nevaluate the processes, procedures, and hardware for recovery operations  (https://www.nasa.gov\n/exploration/systems/ground/index.html ) for crewed Artemis missions. The tests will help prepare th e\nteam for Artemis II, NASAÕs Þrst crewed mission under Artem is that will send four astronauts in Orion\naround the Moon to checkout systems ahead of future lunar missions.\nThe Artemis II crew Ð NASA astronauts Reid Wiseman, Victor G lover, and Christina Koch, and CSA\n(Canadian Space Agency) astronaut Jeremy Hansen Ð will particip ate in recovery testing at sea next year.\nFor more information about Artemis, visit:\nhttps://www.nasa.gov/artemis  (https://www.nasa.gov/artemis )\n-end-\nRachel Kraft\nHeadquarters, Washington\n202-358-1100\nrachel.h.kraft@nasa.gov  (mailto:rachel.h.kraft@nasa.gov )\nMadison Tuttle\nKennedy Space Center, Florida\n321-298-5868\nmadison.e.tuttle@nasa.gov  (mailto:madison.e.tuttle@nasa.gov )\nLast Updated: Jul 28, 2023\nEditor: Claire OÕShea\nTags:   Artemis  (/artemisprogram ),Ground Systems  (http:/ /www.nasa.gov/exploration/systems/ground\n/index.html ),Kennedy Space Center  (/centers/kennedy/home/index.html ),Moon to Mars  (/topics/moon-to-\nmars/ ),Orion Spacecraft  (/exploration/systems/orion/index.html )NASA Invites Media to See Recovery Craft for Artemis Moon Miss... https://www.nasa.gov/press-release/nasa-invites-media-to-see-recov ...\n2 of 3 7/28/23, 4:51 PM",
+          "metadata": {
+            "source": "file",
+            "source_id": "bcecd220-9a74-4b6d-85c8-1a012eb4774d",
+            "url": "file5-NASA-news.pdf",
+            "created_at": "2024-01-30 17:04:10",
+            "author": "",
+            "document_id": "DOC_a4e7853a05ad11a2f95b9545e2a71751",
+            "start_char_idx": 0,
+            "end_char_idx": 1495
+          },
+          "embedding": null,
+          "score": 0.9666336571834377
+        }
+      ]
+    }
+  ]
+}
