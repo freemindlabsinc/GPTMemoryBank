@@ -1,9 +1,12 @@
-from llama_index import VectorStoreIndex
 from loguru import logger
 from fastapi import APIRouter, HTTPException, Depends, Body, Request
+from datetime import datetime
+
+from llama_index import VectorStoreIndex
+
 from memorybank.datastore.datastore import DataStore
 from memorybank.models.api import (QueryResponse, QueryRequest, QueryResult)
-from memorybank.models.models import (DocumentChunkWithScore, DocumentChunkMetadata)
+from memorybank.models.models import (DocumentChunkWithScore, DocumentChunkMetadata, Source)
 from memorybank.services.indexUtils import IndexFactory
 
 router = APIRouter(
@@ -38,16 +41,24 @@ async def query(
         
         results = []
         for qry in request.queries:                        
-            response = query_engine.query(qry.query)
+            qry_response = query_engine.query(qry.query)
             
             srcs = []
-            for x in response.source_nodes:
-                y =  DocumentChunkWithScore(
-                        text=response.response,
-                        score=1,                                                
-                        metadata=DocumentChunkMetadata()
+            for node in qry_response.source_nodes:
+                nowstr = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+                chunk =  DocumentChunkWithScore(
+                            text=node.get_text(),
+                            score=node.get_score(),                                                
+                            metadata=DocumentChunkMetadata(
+                                author="",
+                                document_id=node.node.ref_doc_id,
+                                source=Source.file,
+                                source_id=node.node_id,
+                                url=node.metadata["file_name"],
+                                created_at=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')                                
+                            )
                 )
-                srcs.append(y)
+                srcs.append(chunk)
             
             result = QueryResult(
                 query=qry.query,

@@ -1,9 +1,10 @@
-import loguru
+from loguru import logger
+from injector import Injector
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from injector import Injector
 
+import llama_index
 from memorybank.settings.settings import AppSettings
 
 def _setup_cors(app: FastAPI):
@@ -43,22 +44,27 @@ def _setup_openapi(app: FastAPI):
     app.openapi = custom_openapi
 
 def create_app(app_injector: Injector) -> FastAPI:
-    # Start the API
+    # Add LlamaIndex simple observability
+    llama_index.set_global_handler("simple")
+    
+    # Add injector to request state    
     async def bind_injector_to_request(request: Request) -> None:
         request.state.injector = app_injector
 
-    app = FastAPI(dependencies=[Depends(bind_injector_to_request)])
+    # Create the FastAPI application
+    app = FastAPI(dependencies=[Depends(bind_injector_to_request)])    
     _setup_cors(app)
     _setup_routers(app)
     _setup_openapi(app)
-        
-    cfg = app_injector.get(AppSettings)
-        
+    
+    # Add root endpoint    
+    cfg = app_injector.get(AppSettings)        
     @app.get("/", include_in_schema=False)
     async def root():
+        logger.info("Root endpoint called")
         return {
             "name": cfg.service.name,
             "description": cfg.service.description
-        }
+        }        
     
     return app
