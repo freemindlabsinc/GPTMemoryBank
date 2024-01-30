@@ -4,7 +4,7 @@ from injector import inject
 from memorybank.datastore.datastore import DataStore
 from memorybank.models.api import QueryResult
 from memorybank.models.models import Document, DocumentChunk, DocumentChunkMetadata, DocumentChunkWithScore, DocumentMetadataFilter, Query, QueryWithEmbedding
-from memorybank.settings.settings import AppSettings
+from memorybank.settings.app_settings import AppSettings
 
 class LlamaIndexDataStore(DataStore):
     @inject

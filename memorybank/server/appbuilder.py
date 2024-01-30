@@ -5,7 +5,7 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 import llama_index
-from memorybank.settings.settings import AppSettings
+from memorybank.settings.app_settings import AppSettings
 
 def _setup_cors(app: FastAPI):
     origins = ["*"]

@@ -4,7 +4,7 @@ from memorybank.models.models import Document, DocumentChunk, DocumentChunkMetad
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
 from injector import Injector, inject
-from memorybank.settings.settings import AppSettings
+from memorybank.settings.app_settings import AppSettings
 
 class DataStore(ABC):
     @inject

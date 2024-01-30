@@ -2,7 +2,9 @@ from abc import ABC
 import os
 from elasticsearch import AsyncElasticsearch
 from injector import inject
-from memorybank.settings.settings import AppSettings, EmbeddingType
+from memorybank.settings.app_settings import AppSettings
+from memorybank.settings.embeddings_settings import EmbeddingType
+
 from elasticsearch import AsyncElasticsearch
 from llama_index import (ServiceContext, SimpleDirectoryReader, VectorStoreIndex, Document)
 from llama_index.llms import OpenAI
