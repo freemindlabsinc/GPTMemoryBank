@@ -1,8 +1,5 @@
 from memorybank.settings.openai_Settings import OpenAISettings
-
-
 from pydantic import Field
-
 
 class AzureOpenAISettings(OpenAISettings):
     class Config:

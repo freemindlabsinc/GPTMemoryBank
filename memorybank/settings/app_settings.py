@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from injector import inject
+from pydantic import BaseModel, Field
 from memorybank.settings.azure_openai_settings import AzureOpenAISettings
 from memorybank.settings.azure_queues_settings import AzureQueuesSettings
 from memorybank.settings.elasticsearch_settings import ElasticsearchSettings
@@ -9,13 +10,34 @@ from memorybank.settings.redis_settings import REDISSettings
 from memorybank.settings.service_settings import ServiceSettings
 
 class AppSettings(BaseModel):
-    service: ServiceSettings
-    embeddings: EmbeddingsSettings
-    openai: OpenAISettings
-    azure_openai: AzureOpenAISettings
-    elasticsearch: ElasticsearchSettings
-    redis: REDISSettings
-    azure_queues: AzureQueuesSettings  
+    service: ServiceSettings = Field(
+        default=ServiceSettings(),
+        description="Service settings."
+    )
+    embeddings: EmbeddingsSettings = Field(
+        default=EmbeddingsSettings(),
+        description="Embeddings settings."
+    )
+    openai: OpenAISettings = Field(
+        default=OpenAISettings(),
+        description="OpenAI settings."
+    )
+    azure_openai: AzureOpenAISettings = Field(
+        default=AzureOpenAISettings(),
+        description="Azure OpenAI settings."
+    )
+    elasticsearch: ElasticsearchSettings = Field(
+        default=ElasticsearchSettings(),
+        description="Elasticsearch settings."
+    )
+    redis: REDISSettings = Field(
+        default=REDISSettings(),
+        description="Redis settings."
+    )
+    azure_queues: AzureQueuesSettings = Field(  
+        default=AzureQueuesSettings(),
+        description="Azure Queues settings."
+    )
 
 def load_app_settings_from_env() -> AppSettings:
     loaded = load_dotenv()  # Load environment variables from .env file
@@ -24,18 +46,4 @@ def load_app_settings_from_env() -> AppSettings:
         # NOTE Possibly not a good idea in production
         raise Exception("Could not load .env file")
     
-    #import os
-    #key = os.getenv("OPENAI_API_KEY")
-    
-    # TODO it's probably unnecessary to instantiate them all here... investigate at some point
-    settings = AppSettings(
-        service=ServiceSettings(),
-        embeddings=EmbeddingsSettings(),
-        openai=OpenAISettings(),
-        azure_openai=AzureOpenAISettings(),
-        elasticsearch=ElasticsearchSettings(),
-        redis=REDISSettings(),
-        azure_queues=AzureQueuesSettings()
-    )   
-    
-    return settings
+    return AppSettings()   
