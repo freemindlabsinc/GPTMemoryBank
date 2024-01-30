@@ -29,19 +29,19 @@ async def _get_vector_index(http_request: Request) -> VectorStoreIndex:
 def _get_document_chunks(nodes: List[NodeWithScore]) -> List[DocumentChunkWithScore]:
     nowstr = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
     chunks = []
-    for node in nodes:        
+    for node in nodes:                        
         chunk =  DocumentChunkWithScore(
                             text=node.get_text(),
                             score=node.get_score(),                                                
                             metadata=DocumentChunkMetadata(
                                 author="",
-                                document_id=node.node.ref_doc_id,
+                                document_id=node.node.ref_doc_id or "unspecified",
                                 source=Source.file,
-                                source_id=node.node_id,
-                                url=node.metadata["file_name"],
+                                source_id=node.node_id or "unspecified",
+                                url=node.metadata.get("file_name", "unspecified"),
                                 created_at=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
-                                start_char_idx=node.node.start_char_idx,
-                                end_char_idx=node.node.end_char_idx,
+                                start_char_idx=node.node.start_char_idx or -1,
+                                end_char_idx=node.node.end_char_idx or -1,
                             )
                 )
         chunks.append(chunk)

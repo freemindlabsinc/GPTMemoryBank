@@ -113,7 +113,8 @@ class IndexFactory:
         if (not os.path.exists(persist_directory)):
             storage_context = StorageContext.from_defaults(vector_store=es_vector_store)#, persist_dir=persist_directory)
             
-            docs = SimpleDirectoryReader("./docs").load_data(show_progress=True)
+            docs = []
+            #docs = SimpleDirectoryReader("./docs").load_data(show_progress=True) # DEBUG
             
             index = VectorStoreIndex.from_documents(
                 docs, 
