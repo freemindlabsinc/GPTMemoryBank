@@ -19,6 +19,8 @@ class DocumentMetadata(BaseModel):
 
 class DocumentChunkMetadata(DocumentMetadata):
     document_id: Optional[str] = None
+    start_char_idx: Optional[int] = None
+    end_char_idx: Optional[int] = None
 
 
 class DocumentChunk(BaseModel):
@@ -63,4 +65,6 @@ class QueryWithEmbedding(Query):
 
 class QueryResult(BaseModel):
     query: str
-    results: List[DocumentChunkWithScore]
+    answer: Optional[str] = None
+    formatted_sources: Optional[str] = None
+    links: List[DocumentChunkWithScore]

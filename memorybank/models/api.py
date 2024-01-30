@@ -16,7 +16,7 @@ class UpsertResponse(BaseModel):
     ids: List[str]
 
 
-class QueryRequest(BaseModel):
+class QueryRequest(BaseModel):    
     queries: List[Query]
 
 

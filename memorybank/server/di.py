@@ -1,13 +1,13 @@
 from injector import Injector, singleton
 
 from memorybank.services.indexUtils import IndexFactory
-from memorybank.settings.app_settings import AppSettings, load_app_settings_from_env
+from memorybank.settings.app_settings import AppSettings
 
 def _create_application_injector() -> Injector:
     _injector = Injector(auto_bind=True)
     
     # Settings
-    app_settings = load_app_settings_from_env()
+    app_settings = AppSettings()
     _injector.binder.bind(AppSettings, to=app_settings, scope=singleton)
     
     # Services

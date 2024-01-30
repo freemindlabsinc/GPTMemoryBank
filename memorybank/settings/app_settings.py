@@ -39,11 +39,13 @@ class AppSettings(BaseModel):
         description="Azure Queues settings."
     )
 
-def load_app_settings_from_env() -> AppSettings:
-    loaded = load_dotenv()  # Load environment variables from .env file
-        
-    if not loaded:
-        # NOTE Possibly not a good idea in production
-        raise Exception("Could not load .env file")
-    
-    return AppSettings()   
+# NOTE Apparently this is not needed anymore?
+
+#def _load_app_settings_from_env() -> AppSettings:
+#    loaded = load_dotenv()  # Load environment variables from .env file
+#        
+#    if not loaded:
+#        # NOTE Possibly not a good idea in production
+#        raise Exception("Could not load .env file")
+#    
+#    return AppSettings()   
