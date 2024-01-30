@@ -17,7 +17,7 @@ class DataStore(ABC):
         """
         value = self.app_settings
         # get a list of of just the queries from the Query list
-        query_texts = [query.query for query in queries]
+        query_texts = [query.text for query in queries]
         
         # TODO needs ab abstraction for embeddings
         query_embeddings = [] #get_embeddings(query_texts)

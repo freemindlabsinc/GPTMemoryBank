@@ -1,3 +1,4 @@
+from typing import List
 from loguru import logger
 from fastapi import APIRouter, HTTPException, Depends, Body, Request
 from datetime import datetime
@@ -40,29 +41,14 @@ async def query(
         query_engine = index.as_query_engine()
         
         results = []
-        for qry in request.queries:                        
-            qry_response = query_engine.query(qry.query)
+        for query in request.queries:                        
+            qry_response = query_engine.query(query.text)
             
-            srcs = []
-            for node in qry_response.source_nodes:
-                nowstr = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-                chunk =  DocumentChunkWithScore(
-                            text=node.get_text(),
-                            score=node.get_score(),                                                
-                            metadata=DocumentChunkMetadata(
-                                author="",
-                                document_id=node.node.ref_doc_id,
-                                source=Source.file,
-                                source_id=node.node_id,
-                                url=node.metadata["file_name"],
-                                created_at=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')                                
-                            )
-                )
-                srcs.append(chunk)
+            doc_chunks = get_document_chunks(qry_response)
             
             result = QueryResult(
-                query=qry.query,
-                results = srcs)
+                query = query.text,
+                results = doc_chunks)
             
             results.append(result)
         
@@ -75,6 +61,27 @@ async def query(
     
     finally:
         logger.info(f"Query: {request.queries}")
+
+def get_document_chunks(qry_response) -> List[DocumentChunkWithScore]:
+    nowstr = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    chunks = []
+    for node in qry_response.source_nodes:
+        
+        chunk =  DocumentChunkWithScore(
+                            text=node.get_text(),
+                            score=node.get_score(),                                                
+                            metadata=DocumentChunkMetadata(
+                                author="",
+                                document_id=node.node.ref_doc_id,
+                                source=Source.file,
+                                source_id=node.node_id,
+                                url=node.metadata["file_name"],
+                                created_at=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')                                
+                            )
+                )
+        chunks.append(chunk)
+        
+    return chunks
  
  # ------------------------ Future enpoints ------------------------
  # /summarize
