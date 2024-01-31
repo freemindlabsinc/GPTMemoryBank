@@ -1,3 +1,4 @@
+from loguru import logger
 from abc import ABC
 import os
 from elasticsearch import AsyncElasticsearch
@@ -93,6 +94,7 @@ class IndexFactory:
 
     vector_store_index = None
     async def get_index(self) -> VectorStoreIndex:
+        
         if self.vector_store_index is None:
             self.vector_store_index = await self._get_index()
         
@@ -100,6 +102,8 @@ class IndexFactory:
         
 
     async def _get_index(self) -> VectorStoreIndex:
+        logger.debug("Getting vector index...")
+
         # Instantiate the Elasticsearch client
         es_client = self._create_elasticsearch_client()    
         service_context = self._create_llm_service_context()
