@@ -10,7 +10,7 @@ from llama_index import Document, VectorStoreIndex
 from llama_index import SimpleDirectoryReader
 
 from memorybank.models.api import (UpsertRequest, UpsertResponse)
-from memorybank.services.indexUtils import IndexFactory
+from memorybank.services.index_factory import IndexFactory
 from memorybank.services.fileuploads import store_uploaded_file
 
 router = APIRouter(

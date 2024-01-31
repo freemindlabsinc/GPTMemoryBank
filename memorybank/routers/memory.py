@@ -9,7 +9,7 @@ from llama_index.schema import NodeWithScore
 from memorybank.datastore.datastore import DataStore
 from memorybank.models.api import (QueryResponse, QueryRequest, QueryResult)
 from memorybank.models.models import (DocumentChunkWithScore, DocumentChunkMetadata, Source)
-from memorybank.services.indexUtils import IndexFactory
+from memorybank.services.index_factory import IndexFactory
 
 router = APIRouter(
     prefix="/memory",

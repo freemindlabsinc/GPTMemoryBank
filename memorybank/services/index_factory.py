@@ -108,6 +108,7 @@ class IndexFactory:
         es_vector_store = ElasticsearchStore(
             index_name= self.app_settings.elasticsearch.default_index,
             es_client=es_client,
+            
         )
                                 
         if (not os.path.exists(persist_directory)):
