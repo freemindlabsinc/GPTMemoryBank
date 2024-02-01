@@ -1,10 +1,7 @@
 import asyncio
-import random
-import time
-import uuid
-import os
-import numpy as np
 from llama_index import VectorStoreIndex
+import numpy as np
+#from llama_index import VectorStoreIndex
 from loguru import logger
 
 logger.debug("Starting up the basics")
@@ -26,6 +23,13 @@ transcriber = pipeline("automatic-speech-recognition", model="openai/whisper-bas
 
 logger.debug("Launching UI")
 
+# UI stuff
+
+import gradio as gr
+import os
+import time
+
+# Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 # UI stuff
 
 async def _get_index() -> VectorStoreIndex:
@@ -51,10 +55,10 @@ def _transcribe(audio):
     txt = transcriber({"sampling_rate": sr, "raw": y})["text"]
     return txt
 
-async def ask_llama_index(message, history):
+async def ask_llama_index(message):
     #await asyncio.sleep(2)  # simulate a long-running task
     if message is None or message == "":
-        message="What do you know of the moon?"
+        return "Ask a question please"
                     
     index = await asyncio.wait_for(_get_index(), timeout=20)
     engine = index.as_query_engine()
@@ -75,18 +79,91 @@ Links:
     
     return full_response
 
-with gr.Blocks() as cool_shit:
-  chat = gr.ChatInterface(
-      fn=ask_llama_index
-  )  
-  
-  audio = gr.Audio(sources=["microphone", "upload"])
-
-  voice = gr.Interface(
-      fn = _transcribe,
-      inputs=[],
-      outputs=[chat.textbox],
-  )  
+def print_like_dislike(x: gr.LikeData):
+    print(x.index, x.value, x.liked)
 
 
-cool_shit.launch()
+def add_file(history, file):
+    for f in file:
+        history = history + [((f.name,), None)]            
+    
+    return history
+
+
+async def add_text(history, text):    
+    history = history + [(text, None)]
+    
+    return history, gr.Textbox(value="", interactive=False)
+
+
+async def add_audio(history, audio):
+    if audio is not None:    
+        try:    
+            transcribed_msg = _transcribe(audio)
+        except Exception as e:
+            transcribed_msg = f"Error: {e}"
+        
+        history = history + [(transcribed_msg, None)]
+        
+    return history, gr.Audio(sources=["microphone"])
+
+async def bot(history):
+    answered = history[-1][1] is not None
+    if answered:
+        return history
+        
+    question = history[-1][0]
+    
+    try:
+        response = await ask_llama_index(question)
+    except Exception as e:
+        response = f"Error: {e}"
+        
+    history[-1][1] = response
+    return history
+
+with gr.Blocks() as demo:
+    chatbot = gr.Chatbot(
+        [],
+        elem_id="chatbot",
+        bubble_full_width=False,
+        avatar_images=(None, (os.path.join(os.path.dirname(__file__), "icon.png"))),
+    )
+    
+    with gr.Row():
+        audio = gr.Audio(sources=["microphone"])
+
+    with gr.Row():
+        txt = gr.Textbox(
+            scale=4,
+            show_label=False,
+            placeholder="Enter text and press enter, or upload an image",
+            container=False,
+        )
+        upload_btn = gr.UploadButton(
+            "📁", 
+            file_types=["image", "video", "audio", "text"],
+            file_count="multiple",
+        )        
+
+    audio_msg = audio.change(add_audio, [chatbot, audio], [chatbot, audio], queue=False)
+    audio_msg.then(bot, [chatbot], [chatbot])                 
+    audio_msg.then(lambda: gr.Audio(sources=["microphone"], interactive=True), None, [audio], queue=False)
+    
+    # chatbot --> history list
+    # txt -> current edit box text
+    
+    txt_msg = txt.submit(add_text, [chatbot, txt], [chatbot, txt], queue=False)
+    txt_msg.then(bot, [chatbot], [chatbot])
+    txt_msg.then(lambda: gr.Textbox(interactive=True), None, [txt], queue=False)
+    
+    file_msg = upload_btn.upload(add_file, [chatbot, upload_btn], [chatbot], queue=False)
+    file_msg.then(bot, chatbot, chatbot)
+
+    chatbot.like(print_like_dislike, None, None)
+
+
+demo.queue()
+if __name__ == "__main__":
+    demo.launch()
+
