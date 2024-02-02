@@ -129,6 +129,7 @@ with gr.Blocks(css=CSS) as demo:
         [],
         elem_id="chatbot",
         bubble_full_width=False,
+        examples=["What do you know of the moon?", "Tell me about Pyhton", "What is the application Magic?"],
         avatar_images=(None, (os.path.join(os.path.dirname(__file__), "icon.png"))),
     )
     

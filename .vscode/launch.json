@@ -17,7 +17,7 @@
       "type": "python",
       "request": "launch",
       "module": "uvicorn",
-      "args": ["memorybank.server.main:app", "--reload", "--port", "7000"],
+      "args": ["memorybank.server.app:app", "--reload", "--port", "7000"],
       "jinja": true,
       "justMyCode": true
     }
