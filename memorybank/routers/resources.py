@@ -1,6 +1,4 @@
-import os
-import hashlib
-import shutil
+import os, uuid, hashlib
 from fastapi_injector import Injected
 from loguru import logger
 from typing import Optional
@@ -32,18 +30,20 @@ async def upsert_files(
     metadata: Optional[str] = Form(None),
     memory_store: MemoryStore = Injected(MemoryStore),):
     
+    # Stores the files in a temp directory. Hack or the way?
     ids = []
     for file in files:        
         logger.info(f"Upserting file: {file.filename}")
-        tmp_dir = store_uploaded_file(file)
-                
+        tmp_dir = _store_uploaded_file(file)
+            
+    # Parses the files in the temp directory and returns a List[Document] from the files
     docs = SimpleDirectoryReader(tmp_dir).load_data()
     
     ids = []
     for doc in docs:
         # create an md 5 hash of file.filename    
         id = hashlib.md5(file.filename.encode('utf-8')).hexdigest()                    
-        doc.doc_id = "DOC_" + id
+        doc.doc_id = "FILE_" + id
         ids.append(doc.doc_id)        
     
     res = await memory_store.upsert(docs)
@@ -51,59 +51,6 @@ async def upsert_files(
     return UpsertResponse(ids=ids)
 # ------------------------ Enpoint ------------------------
 
-def store_uploaded_file(file: UploadFile):
-    path_name = "uploads"
-    
-    if os.path.exists(path_name) == False:
-        os.mkdir(path_name)        
-    file_location = f"{path_name}/{file.filename}"
-    with open(file_location, "wb+") as file_object:
-        file_object.write(file.file.read())
-        
-    return path_name
-
-def process_uploaded_document(doc: Document):
-    
-    pass
-
-@router.post(
-    "/upsert-file",
-    response_model=UpsertResponse,
-)
-async def upsert_file(
-    http_request: Request,
-    file: List[UploadFile] = File(...),
-    metadata: Optional[str] = Form(None),
-    memory_store: MemoryStore = Injected(MemoryStore),  
-):
-    try:
-        # FIXME: This is a hack to get the file converted in a llamaindex Document
-        # FIXME: This is a hack to get the file converted in a llamaindex Document
-        tmp_dir = store_uploaded_file(file)        
-        docs = SimpleDirectoryReader(tmp_dir).load_data()
-        # create an md 5 hash of file.filename
-        for doc in docs:
-            hash = hashlib.md5(file.filename.encode('utf-8')).hexdigest()                    
-            #doc.id = "DOC_" + hashlib.md5(file.filename.encode('utf-8')).hexdigest()
-            doc.doc_id = "DOC_" + hash
-            #doc.id_ = "DOC_" + hash
-        
-        # Gets the veftor index (more in the future)
-        index = await get_vector_index(http_request)                                 
-        
-        # Upserts the documents
-        res = index.refresh_ref_docs(docs)
-                
-        return UpsertResponse(ids=[docs[0].doc_id])
-     
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=500, detail=f"str({e})")
-    
-    finally:  
-        # removes the temporary directory and the file
-        shutil.rmtree(tmp_dir) 
-        logger.info(f"Upsert_file: {file.filename}")
 
 # ------------------------ Enpoint ------------------------
 @router.post(
@@ -112,20 +59,20 @@ async def upsert_file(
 )
 async def upsert_docs(
     http_request: Request,
-    request: UpsertRequest = Body(...),
+    request: UpsertRequest = Body(...),    
+    memory_store: MemoryStore = Injected(MemoryStore),
 ):
     try:        
-        index = await get_vector_index(http_request)
+        docs = request.documents
         
         ids = []
-        for doc in request.documents:
-            hash = hashlib.md5(doc.id.encode('utf-8')).hexdigest()        
-            newDoc = Document(
-                doc_id = "MSG_" + hash,
-                text = doc.text,                
-            )
-            
-            res = index.refresh_ref_docs([newDoc])            
+        for doc in docs:
+            # create an md 5 hash of file.filename    
+            id = str(uuid.uuid4())
+            doc.doc_id = "DOC_" + id
+            ids.append(doc.doc_id)        
+    
+        res = await memory_store.upsert(docs)
         
         return UpsertResponse(ids=ids)
     
@@ -164,3 +111,16 @@ def upsert_from(
 )
 def delete(document_ids: List[str]):
     return UpsertResponse(ids=["NotImplementedYet"])
+
+# ------------------------ Internals ------------------------
+
+def _store_uploaded_file(file: UploadFile):
+    path_name = "uploads"
+    
+    if os.path.exists(path_name) == False:
+        os.mkdir(path_name)        
+    file_location = f"{path_name}/{file.filename}"
+    with open(file_location, "wb+") as file_object:
+        file_object.write(file.file.read())
+        
+    return path_name
