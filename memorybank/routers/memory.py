@@ -109,12 +109,6 @@ async def summarize(
     finally:
         logger.info(f"Summarize: {request.queries}") 
     
-    
-    
-    
-    
-    
-    
 # ------------------------ Future enpoints ------------------------
  # /summarize
  # /chat

@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: Web App",
+      "name": "Web App",
       "type": "python",
       "request": "launch",
       "module": "memorybank.ui.app",
@@ -13,7 +13,7 @@
     },
 
     {
-      "name": "Fast API",
+      "name": "API",
       "type": "python",
       "request": "launch",
       "module": "uvicorn",
