@@ -1,4 +1,5 @@
 import os, uuid, hashlib
+import shutil
 from fastapi_injector import Injected
 from loguru import logger
 from typing import Optional
@@ -107,25 +108,37 @@ def generate_id(doc : Document, prefix: str, generator: str):
     
     return doc.doc_id
 
-def _store_uploaded_file(file: UploadFile):
-    path_name = "uploads"
-    
+def _store_uploaded_file(path_name: str, file: UploadFile):
     logger.info(f"Upserting file: {file.filename}")
         
     if os.path.exists(path_name) == False:
         os.mkdir(path_name)        
+        
     file_location = f"{path_name}/{file.filename}"
+    
     with open(file_location, "wb+") as file_object:
         file_object.write(file.file.read())
         
-    return path_name
+    return file_location
 
 def _convert_uploaded_files_to_documents(files: List[UploadFile]) -> List[Document]:    
     # Stores the files in a temp directory. Hack or the way?
-    for file in files:        
-        tmp_dir = _store_uploaded_file(file)
+    path_name = "/uploads"
+    try:
+        for file in files:        
+            _store_uploaded_file(path_name, file)
+            
+        # Parses the files in the temp directory and returns a List[Document] from the files
+        docs = SimpleDirectoryReader(path_name).load_data()
     
-    # Parses the files in the temp directory and returns a List[Document] from the files
-    docs = SimpleDirectoryReader(tmp_dir).load_data()
+        return docs
     
-    return docs
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail="Internal Service Error")
+    
+    finally:        
+        if (os.path.exists(path_name)):
+            shutil.rmtree(path_name)
+    
+    
