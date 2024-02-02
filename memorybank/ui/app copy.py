@@ -14,7 +14,7 @@ from transformers import pipeline
 
 logger.debug("Starting up the Memory Bank")
 from memorybank.server.di import setup_services
-from memorybank.services.index_factory import IndexFactory
+from memorybank.abstractions.index_factory import IndexFactory
 from memorybank.settings.app_settings import AppSettings
 
 logger.debug("Setting up dependency injection")
@@ -30,7 +30,7 @@ logger.debug("Launching UI")
 # UI stuff
 
 async def _get_index() -> VectorStoreIndex:
-    index = await index_factory.get_index()    
+    index = await index_factory.get_vector_index()    
     return index
 
 def _get_formatted_sources(response, length: int = 100) -> str:

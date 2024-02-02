@@ -1,5 +1,7 @@
+import os
 import hashlib
 import shutil
+from fastapi_injector import Injected
 from loguru import logger
 from typing import Optional
 from fastapi import File, Form, HTTPException, Depends, Body, UploadFile, Request
@@ -8,10 +10,10 @@ from typing import Optional, List
 
 from llama_index import Document, VectorStoreIndex
 from llama_index import SimpleDirectoryReader
+from memorybank.abstractions.memory_store import MemoryStore
 
 from memorybank.models.api import (UpsertRequest, UpsertResponse)
-from memorybank.services.index_factory import IndexFactory
-from memorybank.services.fileuploads import store_uploaded_file
+from memorybank.abstractions.index_factory import IndexFactory
 
 router = APIRouter(
     prefix="/resources",
@@ -19,24 +21,60 @@ router = APIRouter(
     #dependencies=[Depends(validate_token)],
     )
 
-# -- to centralize ---
-async def get_vector_index(http_request: Request) -> VectorStoreIndex:
-    injector = http_request.state.injector
-    indexFactory = injector.get(IndexFactory)
-    
-    index = await indexFactory.get_index() 
-    
-    return index
-
 # ------------------------ Enpoint ------------------------
+@router.post(
+    "/upsert-files",
+    response_model=UpsertResponse,
+)
+async def upsert_files(
+    http_request: Request,
+    files: List[UploadFile] = File(...),
+    metadata: Optional[str] = Form(None),
+    memory_store: MemoryStore = Injected(MemoryStore),):
+    
+    ids = []
+    for file in files:        
+        logger.info(f"Upserting file: {file.filename}")
+        tmp_dir = store_uploaded_file(file)
+                
+    docs = SimpleDirectoryReader(tmp_dir).load_data()
+    
+    ids = []
+    for doc in docs:
+        # create an md 5 hash of file.filename    
+        id = hashlib.md5(file.filename.encode('utf-8')).hexdigest()                    
+        doc.doc_id = "DOC_" + id
+        ids.append(doc.doc_id)        
+    
+    res = await memory_store.upsert(docs)
+            
+    return UpsertResponse(ids=ids)
+# ------------------------ Enpoint ------------------------
+
+def store_uploaded_file(file: UploadFile):
+    path_name = "uploads"
+    
+    if os.path.exists(path_name) == False:
+        os.mkdir(path_name)        
+    file_location = f"{path_name}/{file.filename}"
+    with open(file_location, "wb+") as file_object:
+        file_object.write(file.file.read())
+        
+    return path_name
+
+def process_uploaded_document(doc: Document):
+    
+    pass
+
 @router.post(
     "/upsert-file",
     response_model=UpsertResponse,
 )
 async def upsert_file(
     http_request: Request,
-    file: UploadFile = File(...),
-    metadata: Optional[str] = Form(None),    
+    file: List[UploadFile] = File(...),
+    metadata: Optional[str] = Form(None),
+    memory_store: MemoryStore = Injected(MemoryStore),  
 ):
     try:
         # FIXME: This is a hack to get the file converted in a llamaindex Document
@@ -98,6 +136,8 @@ async def upsert_docs(
     finally:
         logger.info(f"Upsert: {request}")
 
+
+
  # ------------------------ Future enpoints ------------------------
  # //upsert_from
  
@@ -115,24 +155,7 @@ def upsert_from(
 ):
     return UpsertResponse(ids=["NotImplementedYet"])
 
-# ------------------------ Enpoint ------------------------
-@router.post(
-    "/upsert-many",
-    response_model=UpsertResponse,
-)
-async def upsert_many(
-    http_request: Request,
-    files: List[UploadFile] = File(...),
-    metadata: Optional[str] = Form(None),    
-):
-    ids = []
-    for file in files:
-        logger.info(f"Upserting file: {file.filename}")
-        resp = await upsert_file(http_request, file, metadata)
-        for id in resp.ids:
-            ids.append(id)
-        
-    return UpsertResponse(ids=ids)
+
     
 # ------------------------ Enpoint ------------------------
 @router.delete(

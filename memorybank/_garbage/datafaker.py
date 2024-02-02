@@ -1,13 +1,13 @@
-from memorybank.models.api import QueryResult
-from memorybank.models.models import Document, DocumentChunk, DocumentChunkMetadata, DocumentChunkWithScore, DocumentMetadataFilter, Query, QueryWithEmbedding
-from abc import ABC, abstractmethod
 from typing import List
 
-def _fake_results() -> List[QueryResult]:
+from memorybank.models.api import QueryResult
+from memorybank.models.models import DocumentChunk, DocumentChunkMetadata
+
+def generate_fake_query_results() -> List[QueryResult]:
     res1 = QueryResult(
         query="Who is Alessandro Federici?", 
         results=[
-            DocumentChunkWithScore(
+            DocumentChunk(
                 score=1.0, 
                 text="Alessandro Federici is the developer who created this project.", 
                 metadata=DocumentChunkMetadata(
@@ -24,7 +24,7 @@ def _fake_results() -> List[QueryResult]:
     res2 = QueryResult(
         query="How old is Alessandro Federici?", 
         results=[
-            DocumentChunkWithScore(
+            DocumentChunk(
                 score=1.0, 
                 text="Alessandro Federici is 48.", 
                 metadata=DocumentChunkMetadata(
@@ -37,7 +37,7 @@ def _fake_results() -> List[QueryResult]:
                     )
                 ),
             
-            DocumentChunkWithScore(
+            DocumentChunk(
                 score=1.0, 
                 text="Alessandro Federici is 47.", 
                 metadata=DocumentChunkMetadata(

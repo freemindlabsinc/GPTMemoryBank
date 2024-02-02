@@ -1,5 +1,4 @@
 from loguru import logger
-from abc import ABC
 import os
 from elasticsearch import AsyncElasticsearch
 from injector import inject
@@ -7,7 +6,7 @@ from memorybank.settings.app_settings import AppSettings
 from memorybank.settings.embeddings_settings import EmbeddingType
 
 from elasticsearch import AsyncElasticsearch
-from llama_index import (ServiceContext, SimpleDirectoryReader, VectorStoreIndex, Document)
+from llama_index import (ServiceContext, SimpleDirectoryReader, VectorStoreIndex)
 from llama_index.llms import OpenAI
 from llama_index.llms import OpenAI
 from llama_index.embeddings import HuggingFaceEmbedding    
@@ -26,10 +25,12 @@ from llama_index.storage.index_store import RedisIndexStore
 from llama_index.llms import AzureOpenAI
 from llama_index.embeddings import AzureOpenAIEmbedding
 
-class IndexFactory:
+from memorybank.abstractions.index_factory import IndexFactory
+
+class LlamaIndexIndexFactory(IndexFactory):
     @inject
     def __init__(self, app_settings: AppSettings):
-        self.app_settings = app_settings            
+        self.app_settings = app_settings
     
     def _create_elasticsearch_client(self) -> AsyncElasticsearch:
         # Instantiate the Elasticsearch client        
@@ -62,8 +63,7 @@ class IndexFactory:
             # FIXME finish / instantiate OpenAI
             raise Exception("Not supported embedding type fix me")
         
-        return embed_model
-    
+        return embed_model    
     
     def _create_llm_service_context(self) -> ServiceContext:        
         if self.app_settings.openai.api_key is not None:
@@ -92,16 +92,7 @@ class IndexFactory:
         
         return service_context
 
-    vector_store_index = None
-    async def get_index(self) -> VectorStoreIndex:
-        
-        if self.vector_store_index is None:
-            self.vector_store_index = await self._get_index()
-        
-        return self.vector_store_index
-        
-
-    async def _get_index(self) -> VectorStoreIndex:
+    async def get_vector_index(self) -> VectorStoreIndex:                
         logger.debug("Getting vector index...")
 
         # Instantiate the Elasticsearch client
@@ -134,23 +125,12 @@ class IndexFactory:
                 vector_store=es_vector_store,
                 )
             
-            index = load_index_from_storage(            
+            index = load_index_from_storage(
                 storage_context=storage_context,            
-                show_progress=True)
-            index._service_context = service_context # Hack to get around the fact that the service context is correct        
-        
-        #storage_context = StorageContext.from_defaults(
-        #    vector_store=VectorStoreIndex.from_vector_store(vector_store= es_vector_store, 
-        #                                                    service_context=service_context),
-        #    #docstore=SimpleDocumentStore.from_persist_dir(persist_dir=persist_directory),        
-        #    #index_store=SimpleIndexStore.from_persist_dir(persist_dir=persist_directory)
-        #)
+                show_progress=True,
+                
+                # NOTE kwargs for the index is kind of ugly. See https://github.com/run-llama/llama_index/issues/1974
+                service_context = service_context
+                )
             
-        #storage_context.persist(persist_dir=persist_directory)      
-        
-        #index = load_index_from_storage(storage_context=storage_context)
-        #from_vector_store(
-        #    vector_store=es_vector_store,         
-        #    service_context=service_context)          
-        
         return index

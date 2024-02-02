@@ -1,19 +1,17 @@
 import asyncio
 from llama_index import VectorStoreIndex
 import numpy as np
-#from llama_index import VectorStoreIndex
 from loguru import logger
 
-logger.debug("Starting up the basics")
 import gradio as gr
 from transformers import pipeline
+from memorybank.abstractions.memory_store import MemoryStore
+from memorybank.models.models import Query
 
-logger.debug("Starting up the Memory Bank")
 from memorybank.server.di import setup_services
-from memorybank.services.index_factory import IndexFactory
+from memorybank.abstractions.index_factory import IndexFactory
 from memorybank.settings.app_settings import AppSettings
 
-logger.debug("Setting up dependency injection")
 injector = setup_services()
 appSettings = injector.get(AppSettings)
 index_factory = injector.get(IndexFactory)
@@ -27,25 +25,9 @@ logger.debug("Launching UI")
 
 import gradio as gr
 import os
-import time
 
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 # UI stuff
-
-async def _get_index() -> VectorStoreIndex:
-    index = await index_factory.get_index()    
-    return index
-
-def _get_formatted_sources(response, length: int = 100) -> str:
-        """Get formatted sources text."""
-        texts = []
-        for source_node in response.source_nodes:
-            #fmt_text_chunk = truncate_text(source_node.node.get_content(), length)
-            doc_id = source_node.node.node_id or "None"
-            file_name = source_node.node.metadata["file_name"]
-            source_text = f"> Source (Doc id: {doc_id}): {file_name}"
-            texts.append(source_text)
-        return "\n\n".join(texts)
 
 def _transcribe(audio):
     sr, y = audio
@@ -60,12 +42,19 @@ async def ask_llama_index(message):
     if message is None or message == "":
         return "Ask a question please"
                     
-    index = await asyncio.wait_for(_get_index(), timeout=20)
-    engine = index.as_query_engine()
-        
-    response = await asyncio.wait_for(engine.aquery(message), timeout=20)
-    response_text = response.response
-    response_links = _get_formatted_sources(response=response, length=100)
+    memory_store = injector.get(MemoryStore)    
+    
+    qry = Query(
+        text=message,
+        filter=None,
+        top_k=3
+    )
+    
+    results = await memory_store.query([qry])
+    
+    first_response = results[0]
+    response_text = first_response.answer
+    response_links = first_response.formatted_sources
     
     full_response = f"""
 Response:
@@ -74,8 +63,8 @@ Response:
 Links:
 {response_links}
 """
-    #full_response = "the response to " + message + " is: " + message
-    logger.debug(f"Response: {full_response}")
+    
+    logger.debug(f"Message: {message}\nResponse: {full_response}")
     
     return full_response
 

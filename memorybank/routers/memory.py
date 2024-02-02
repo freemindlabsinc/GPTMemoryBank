@@ -1,4 +1,5 @@
 from typing import List
+from fastapi_injector import Injected
 from loguru import logger
 from fastapi import APIRouter, HTTPException, Depends, Body, Request
 from datetime import datetime
@@ -6,10 +7,10 @@ from datetime import datetime
 from llama_index import Response, VectorStoreIndex
 from llama_index.schema import NodeWithScore
 
-from memorybank.datastore.datastore import DataStore
+from memorybank.abstractions.memory_store import MemoryStore
 from memorybank.models.api import (QueryResponse, QueryRequest, QueryResult)
-from memorybank.models.models import (DocumentChunkWithScore, DocumentChunkMetadata, Source)
-from memorybank.services.index_factory import IndexFactory
+from memorybank.models.models import (DocumentChunk, DocumentChunkMetadata, Source)
+from memorybank.abstractions.index_factory import IndexFactory
 
 router = APIRouter(
     prefix="/memory",
@@ -17,20 +18,11 @@ router = APIRouter(
     #dependencies=[Depends(validate_token)],
     )
 
-# -- to centralize ---
-async def _get_vector_index(http_request: Request) -> VectorStoreIndex:
-    injector = http_request.state.injector
-    indexFactory = injector.get(IndexFactory)
-    
-    index = await indexFactory.get_index() 
-    
-    return index
-
-def _get_document_chunks(nodes: List[NodeWithScore]) -> List[DocumentChunkWithScore]:
+def _get_document_chunks(nodes: List[NodeWithScore]) -> List[DocumentChunk]:
     nowstr = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
     chunks = []
     for node in nodes:                        
-        chunk =  DocumentChunkWithScore(
+        chunk =  DocumentChunk(
                             text=node.get_text(),
                             score=node.get_score(),                                                
                             metadata=DocumentChunkMetadata(
@@ -58,26 +50,13 @@ def _get_document_chunks(nodes: List[NodeWithScore]) -> List[DocumentChunkWithSc
 async def query(
     http_request: Request,
     request: QueryRequest = Body(...),    
+    memory_store: MemoryStore = Injected(MemoryStore)
 ):
     try:        
-        index = await _get_vector_index(http_request) 
-        query_engine = index.as_query_engine()
-        
-        results = []
-        for query in request.queries:                        
-            qry_response = query_engine.query(query.text)
-                        
-            doc_chunks = _get_document_chunks(qry_response.source_nodes)
-            
-            result = QueryResult(                
-                query = query.text,
-                answer = qry_response.response,
-                formatted_sources = qry_response.get_formatted_sources(),
-                links = doc_chunks)
-            
-            results.append(result)
-        
+        results = await memory_store.query(request.queries)
+                  
         response = QueryResponse(results=results)
+        
         return response
     
     except Exception as e:
@@ -96,38 +75,18 @@ async def query(
 )
 async def retrieve(
     http_request: Request,
-    request: QueryRequest = Body(...),    
+    request: QueryRequest = Body(...),   
+    memory_store: MemoryStore = Injected(MemoryStore) 
 ):
-    try:        
-        index = await _get_vector_index(http_request) 
-        
-        results = []
-        for query in request.queries:                                    
-            retriever = index.as_retriever(
-                similarity_top_k=query.top_k,
-                
-            )        
-            nodes_with_score = retriever.retrieve(query.text)
-                        
-            doc_chunks = _get_document_chunks(nodes_with_score)
-            
-            result = QueryResult(                
-                query = query.text,
-                #answer = "See references below",
-                #formatted_sources = "none",
-                links = doc_chunks)
-            
-            results.append(result)
-        
-        response = QueryResponse(results=results)
-        return response
+    try: 
+        raise NotImplementedError("Not implemented yet")        
     
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail="Internal Service Error")
     
     finally:
-        logger.info(f"Retrieve: {request.queries}")        
+        logger.info(f"Summarize: {request.queries}") 
 
 
 @router.post(
@@ -141,29 +100,7 @@ async def summarize(
     request: QueryRequest = Body(...),    
 ):
     try: 
-        raise NotImplementedError("Not implemented yet")
-        #index = await _get_vector_index(http_request) 
-        #
-        #results = []
-        #for query in request.queries:                                    
-        #    retriever = index.as_retriever(
-        #        similarity_top_k=query.top_k,
-        #        
-        #    )        
-        #    nodes_with_score = retriever.retrieve(query.text)
-        #                
-        #    doc_chunks = _get_document_chunks(nodes_with_score)
-        #    
-        #    result = QueryResult(                
-        #        query = query.text,
-        #        #answer = "See references below",
-        #        #formatted_sources = "none",
-        #        links = doc_chunks)
-        #    
-        #    results.append(result)
-        #
-        #response = QueryResponse(results=results)
-        #return response
+        raise NotImplementedError("Not implemented yet")        
     
     except Exception as e:
         logger.error(e)

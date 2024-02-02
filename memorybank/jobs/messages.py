@@ -7,7 +7,7 @@ import asyncio
 from models.memory_models import (Message)
 from services.config import get_option
 from services.logger import setup_logger
-from services.queue_utils import setup_queue, process_queue
+from utilities.queue_utils import setup_queue, process_queue
 from elasticsearch import AsyncElasticsearch
 import llama_index
 from llama_index import (ServiceContext, SimpleDirectoryReader, VectorStoreIndex, Document)
@@ -15,7 +15,7 @@ from llama_index.llms import OpenAI
 from llama_index.embeddings import HuggingFaceEmbedding    
 from llama_index.vector_stores import ElasticsearchStore
 from llama_index.storage.storage_context import StorageContext
-from memorybank.services import index_factory as esutils
+from memorybank.services import llamaindex_index_factory as esutils
 
 
 # Get the Azure storage connection string and the save message queue from environment variables
