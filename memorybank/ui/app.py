@@ -85,18 +85,18 @@ def print_like_dislike(x: gr.LikeData):
 
 def add_file(history, file):
     for f in file:
-        history = history + [((f.name,), None)]            
+        history = history + [(f"#Consider {f.name} uploaded...", None)]            
     
     return history
 
 
-async def add_text(history, text):    
+def add_text(history, text):    
     history = history + [(text, None)]
     
     return history, gr.Textbox(value="", interactive=False)
 
 
-async def add_audio(history, audio):
+def add_audio(history, audio):
     if audio is not None:    
         try:    
             transcribed_msg = _transcribe(audio)
@@ -108,11 +108,16 @@ async def add_audio(history, audio):
     return history, gr.Audio(sources=["microphone"])
 
 async def bot(history):
+    if len(history) == 0:
+        return history
     answered = history[-1][1] is not None
     if answered:
         return history
         
     question = history[-1][0]
+    
+    if question.startswith("#"):
+        return history
     
     try:
         response = await ask_llama_index(question)
@@ -122,7 +127,15 @@ async def bot(history):
     history[-1][1] = response
     return history
 
-with gr.Blocks() as demo:
+
+CSS ="""
+.contain { display: flex; flex-direction: column; }
+.gradio-container { height: 100vh !important; }
+#component-0 { height: 100%; }
+#chatbot { flex-grow: 1; overflow: auto;}
+"""
+
+with gr.Blocks(css=CSS) as demo:
     chatbot = gr.Chatbot(
         [],
         elem_id="chatbot",
