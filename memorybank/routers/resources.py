@@ -1,4 +1,5 @@
 import os, uuid, hashlib
+from pathlib import Path
 import shutil
 from fastapi_injector import Injected
 from loguru import logger
@@ -29,17 +30,17 @@ async def upsert_files(
     files: List[UploadFile] = File(...),
     metadata: Optional[str] = Form(None),
     memory_store: MemoryStore = Injected(MemoryStore),):
-    
+        
     try:
-        docs = _convert_uploaded_files_to_documents(files)
+        docs = _convert_uploaded_files_to_chunks(files)
             
         ids = [generate_id(
-            doc=doc, 
-            prefix="DOC_", 
+            doc=doc,
+            prefix="DOC_",
             # generates the id by MD5ing the actual text
             generator = lambda: hashlib.md5(doc.text.encode('utf-8')).hexdigest()) for doc in docs]
         
-        res = await memory_store.upsert(docs)            
+        res = await memory_store.upsert(docs)
         successful_ids = [id for id, success in zip(ids, res) if success]
             
         return UpsertResponse(ids=successful_ids)  
@@ -49,7 +50,7 @@ async def upsert_files(
         raise HTTPException(status_code=500, detail="Internal Service Error")
     
     finally:
-        logger.info(f"upsert_files: {files.count}")
+        logger.info(f"upsert_files:")
 
 # ------------------------ Enpoint ------------------------
 @router.post(
@@ -104,34 +105,36 @@ def delete(document_ids: List[str]):
 # ------------------------ Internals ------------------------
 def generate_id(doc : Document, prefix: str, generator: str):
     tmp = generator()
-    doc.doc_id = prefix + tmp
+    #doc.id_ = doc.metadata["file_name"]    
+    hash = hashlib.md5(doc.text.encode('utf-8')).hexdigest()
+    doc.id_ = prefix + tmp
     
-    return doc.doc_id
+    return doc.id_
 
-def _store_uploaded_file(path_name: str, file: UploadFile):
-    logger.info(f"Upserting file: {file.filename}")
-        
-    if os.path.exists(path_name) == False:
-        os.mkdir(path_name)        
-        
-    file_location = f"{path_name}/{file.filename}"
-    
-    with open(file_location, "wb+") as file_object:
-        file_object.write(file.file.read())
-        
-    return file_location
-
-def _convert_uploaded_files_to_documents(files: List[UploadFile]) -> List[Document]:    
+def _convert_uploaded_files_to_chunks(files: List[UploadFile]) -> List[Document]:    
     # Stores the files in a temp directory. Hack or the way?
-    path_name = "/uploads"
+    path_name = "./.uploads"
     try:
+        if (not os.path.exists(path_name)):
+            logger.warning(f"Creating directory: {path_name}")
+            os.mkdir(path_name)
+                    
+        #folder = Path(path_name)
+        #refs = folder.glob("*")
+        #for ref in refs:
+        #    logger.info(f"Found: {ref}")            
+            
         for file in files:        
             _store_uploaded_file(path_name, file)
             
         # Parses the files in the temp directory and returns a List[Document] from the files
-        docs = SimpleDirectoryReader(path_name).load_data()
+        chunks = SimpleDirectoryReader(
+            input_dir= path_name,
+            exclude_hidden=False).load_data(
+                show_progress=True,
+                num_workers=1,)
     
-        return docs
+        return chunks
     
     except Exception as e:
         logger.error(e)
@@ -139,6 +142,14 @@ def _convert_uploaded_files_to_documents(files: List[UploadFile]) -> List[Docume
     
     finally:        
         if (os.path.exists(path_name)):
-            shutil.rmtree(path_name)
+            shutil.rmtree(path_name)        
     
+def _store_uploaded_file(path_name: str, file: UploadFile):
+    logger.info(f"Upserting file: {file.filename}")
+        
+    file_location = f"{path_name}/{file.filename}"
     
+    with open(file_location, "wb+") as file_object:
+        file_object.write(file.file.read())
+        
+    return file_location    

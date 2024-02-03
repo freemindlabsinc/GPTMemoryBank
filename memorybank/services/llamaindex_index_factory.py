@@ -99,14 +99,15 @@ class LlamaIndexIndexFactory(IndexFactory):
         es_client = self._create_elasticsearch_client()    
         service_context = self._create_llm_service_context()
         
-        persist_directory = "./.persistDir"
         es_vector_store = ElasticsearchStore(
             index_name= self.app_settings.elasticsearch.default_index,
             es_client=es_client,
             
         )
-                                
+        
+        persist_directory = "./.persistDir"                                              
         if (not os.path.exists(persist_directory)):
+            os.mkdir(persist_directory)
             storage_context = StorageContext.from_defaults(vector_store=es_vector_store)#, persist_dir=persist_directory)
             
             docs = []

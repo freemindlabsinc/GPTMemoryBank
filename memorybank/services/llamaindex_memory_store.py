@@ -3,7 +3,7 @@ from injector import inject
 from llama_index import Response
 from memorybank.abstractions.memory_store import MemoryStore
 from memorybank.models.api import QueryResult
-from memorybank.models.models import Document, DocumentChunk, DocumentMetadataFilter, Query
+from memorybank.models.models import Document, DocumentMetadataFilter, Query
 from memorybank.settings.app_settings import AppSettings
 from memorybank.abstractions.index_factory import IndexFactory
 
@@ -43,13 +43,13 @@ class LlamaIndexMemoryStore(MemoryStore):
                 
         return responses 
     
-    async def upsert(self, chunks: Dict[str, List[DocumentChunk]]) -> List[str]:
+    async def upsert(self, documents: List[Document]) -> List[str]:
         """
         Takes in a list of list of document chunks and inserts them into the database.
         Return a list of document ids.
         """
         idx = await self.index_factory.get_vector_index()
-        res = idx.refresh_ref_docs(chunks)
+        res = idx.refresh_ref_docs(documents=documents)
         
         return res
 

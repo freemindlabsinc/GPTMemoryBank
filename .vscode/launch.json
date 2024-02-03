@@ -19,7 +19,7 @@
       "module": "uvicorn",
       "args": ["memorybank.server.app:app", "--reload", "--port", "7000"],
       "jinja": true,
-      "justMyCode": true
+      "justMyCode": false
     }
   ]
 }
