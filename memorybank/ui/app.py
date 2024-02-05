@@ -41,9 +41,7 @@ def _transcribe(audio):
 async def query_llama_index(message: str) -> str:
     #await asyncio.sleep(2)  # simulate a long-running task
     if message is None or message == "":
-        return "No question provided."
-    
-    
+        return "No question provided."        
     
     # TODO try-catch
     qry = Query(
@@ -59,10 +57,10 @@ async def query_llama_index(message: str) -> str:
     response_links = first_response.formatted_sources
     
     full_response = f"""
-Response:
+**Response**:
 {response_text}
 
-Links:
+### Links:
 {response_links}
 """
     
@@ -145,20 +143,38 @@ CSS ="""
 .gradio-container { height: 100vh !important; }
 #component-0 { height: 100%; }
 #chatbot { flex-grow: 1; overflow: auto;}
+footer {visibility: hidden}
 """
 use_queue = True
 
 def _create_audio():
     return gr.Audio(
+        label="🎤 Record or upload audio files...",
         sources=["microphone", "upload"], 
         show_download_button=True,
         editable=True,
         interactive=True,         
         show_label=True)
+    
+def _create_textbox():
+    return gr.Textbox(
+        scale=4,
+        show_label=False,
+        placeholder="Enter text and press enter, or upload a text file or audio file.",
+        container=False,
+    )
+    
+def _create_upload_button():
+    return gr.UploadButton(
+        "📁 Upload", 
+        file_types=["text", "audio"],
+        file_count="multiple",            
+    )
 
-with gr.Blocks(css=CSS) as demo:
+with gr.Blocks(title="Memory Bank by Free Mind Labs", css=CSS) as demo:    
     chatbot = gr.Chatbot(
         [],
+        label = "Memory Bank",
         elem_id="chatbot",
         bubble_full_width=False,
         avatar_images=(None, (os.path.join(os.path.dirname(__file__), "icon.png"))),
@@ -166,17 +182,8 @@ with gr.Blocks(css=CSS) as demo:
     )
         
     with gr.Row():
-        txt = gr.Textbox(
-            scale=4,
-            show_label=False,
-            placeholder="Enter text and press enter, or upload a text file or audio file.",
-            container=False,
-        )
-        upload_btn = gr.UploadButton(
-            "📁 Upload", 
-            file_types=["text", "audio"],
-            file_count="multiple",            
-        )        
+        txt = _create_textbox()
+        upload_btn = _create_upload_button()
     
     with gr.Row():
         audio = _create_audio()
@@ -190,7 +197,7 @@ with gr.Blocks(css=CSS) as demo:
     
     txt_msg = txt.submit(add_text, [chatbot, txt], [chatbot, txt], queue=use_queue)
     txt_msg.then(bot, [chatbot], [chatbot])
-    txt_msg.then(lambda: gr.Textbox(interactive=True), None, [txt], queue=use_queue)
+    txt_msg.then(_create_textbox, None, [txt], queue=use_queue)
     
     file_msg = upload_btn.upload(add_files, [chatbot, upload_btn], [chatbot], queue=use_queue)
     file_msg.then(bot, chatbot, chatbot)
