@@ -147,6 +147,15 @@ CSS ="""
 #chatbot { flex-grow: 1; overflow: auto;}
 """
 use_queue = True
+
+def _create_audio():
+    return gr.Audio(
+        sources=["microphone", "upload"], 
+        show_download_button=True,
+        editable=True,
+        interactive=True,         
+        show_label=True)
+
 with gr.Blocks(css=CSS) as demo:
     chatbot = gr.Chatbot(
         [],
@@ -155,15 +164,12 @@ with gr.Blocks(css=CSS) as demo:
         avatar_images=(None, (os.path.join(os.path.dirname(__file__), "icon.png"))),
         #examples=["What do you know of the moon?", "Tell me about Pyhton", "What is the application Magic?"],        
     )
-    
-    with gr.Row():
-        audio = gr.Audio(sources=["microphone"])
-
+        
     with gr.Row():
         txt = gr.Textbox(
             scale=4,
             show_label=False,
-            placeholder="Enter text and press enter, or upload an image",
+            placeholder="Enter text and press enter, or upload a text file or audio file.",
             container=False,
         )
         upload_btn = gr.UploadButton(
@@ -171,10 +177,13 @@ with gr.Blocks(css=CSS) as demo:
             file_types=["text", "audio"],
             file_count="multiple",            
         )        
+    
+    with gr.Row():
+        audio = _create_audio()
 
     audio_msg = audio.change(add_audio, [chatbot, audio], [chatbot, audio], queue=use_queue)
     audio_msg.then(bot, [chatbot], [chatbot])                 
-    audio_msg.then(lambda: gr.Audio(sources=["microphone"], interactive=True), None, [audio], queue=use_queue)
+    audio_msg.then(_create_audio, None, [audio], queue=use_queue)
     
     # chatbot --> history list
     # txt -> current edit box text
