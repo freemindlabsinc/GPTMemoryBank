@@ -1,5 +1,6 @@
 import asyncio
-from llama_index import VectorStoreIndex
+from fastapi_injector import Injected
+from llama_index import Document, SimpleDirectoryReader, VectorStoreIndex
 import numpy as np
 from loguru import logger
 
@@ -13,8 +14,8 @@ from memorybank.abstractions.index_factory import IndexFactory
 from memorybank.settings.app_settings import AppSettings
 
 injector = setup_services()
-appSettings = injector.get(AppSettings)
-index_factory = injector.get(IndexFactory)
+appSettings:AppSettings = injector.get(AppSettings)
+memory_store:MemoryStore = injector.get(MemoryStore)
 
 logger.debug("Creating speech recognition pipeline")
 transcriber = pipeline("automatic-speech-recognition", model="openai/whisper-base.en")
@@ -37,13 +38,14 @@ def _transcribe(audio):
     txt = transcriber({"sampling_rate": sr, "raw": y})["text"]
     return txt
 
-async def ask_llama_index(message):
+async def query_llama_index(message: str) -> str:
     #await asyncio.sleep(2)  # simulate a long-running task
     if message is None or message == "":
-        return "Ask a question please"
-                    
-    memory_store = injector.get(MemoryStore)    
+        return "No question provided."
     
+    
+    
+    # TODO try-catch
     qry = Query(
         text=message,
         filter=None,
@@ -71,12 +73,26 @@ Links:
 def print_like_dislike(x: gr.LikeData):
     print(x.index, x.value, x.liked)
 
-
-def add_file(history, file):
-    for f in file:
-        history = history + [(f"#Consider {f.name} uploaded...", None)]            
-    
-    return history
+async def add_files(history, file_list):    
+    try:
+        file_paths = []        
+        
+        for f in file_list:                 
+            file_paths.append(f)
+            history = history + [(f"#Consider {f} uploaded...", None)]            
+            
+        chunks = SimpleDirectoryReader(
+                input_files=file_list,
+                filename_as_id=True,
+                exclude_hidden=False).load_data(
+                    show_progress=True)
+                
+        res = await memory_store.upsert(chunks)
+            
+    except Exception as e:
+        history = history + [(f"Error: {e}", None)]
+    finally:
+        return history
 
 
 def add_text(history, text):    
@@ -97,24 +113,31 @@ def add_audio(history, audio):
     return history, gr.Audio(sources=["microphone"])
 
 async def bot(history):
-    if len(history) == 0:
-        return history
-    answered = history[-1][1] is not None
-    if answered:
-        return history
-        
-    question = history[-1][0]
-    
-    if question.startswith("#"):
-        return history
-    
     try:
-        response = await ask_llama_index(question)
-    except Exception as e:
-        response = f"Error: {e}"
+        if len(history) == 0:
+            return history
+        answered = history[-1][1] is not None
+        if answered:
+            return history
+            
+        question = history[-1][0]
         
-    history[-1][1] = response
-    return history
+        if question.startswith("#"):
+            return history
+        
+        try:
+            response = await query_llama_index(question)
+        except Exception as e:
+            response = f"Error: {e}"
+            
+        history[-1][1] = response        
+    
+    except Exception as e:
+        history = history + [(f"Error: {e}", None)]
+    
+    finally:
+        return history
+    
 
 
 CSS ="""
@@ -123,7 +146,7 @@ CSS ="""
 #component-0 { height: 100%; }
 #chatbot { flex-grow: 1; overflow: auto;}
 """
-
+use_queue = True
 with gr.Blocks(css=CSS) as demo:
     chatbot = gr.Chatbot(
         [],
@@ -144,27 +167,26 @@ with gr.Blocks(css=CSS) as demo:
             container=False,
         )
         upload_btn = gr.UploadButton(
-            "📁", 
-            file_types=["image", "video", "audio", "text"],
-            file_count="multiple",
+            "📁 Upload", 
+            file_types=["text", "audio"],
+            file_count="multiple",            
         )        
 
-    audio_msg = audio.change(add_audio, [chatbot, audio], [chatbot, audio], queue=False)
+    audio_msg = audio.change(add_audio, [chatbot, audio], [chatbot, audio], queue=use_queue)
     audio_msg.then(bot, [chatbot], [chatbot])                 
-    audio_msg.then(lambda: gr.Audio(sources=["microphone"], interactive=True), None, [audio], queue=False)
+    audio_msg.then(lambda: gr.Audio(sources=["microphone"], interactive=True), None, [audio], queue=use_queue)
     
     # chatbot --> history list
     # txt -> current edit box text
     
-    txt_msg = txt.submit(add_text, [chatbot, txt], [chatbot, txt], queue=False)
+    txt_msg = txt.submit(add_text, [chatbot, txt], [chatbot, txt], queue=use_queue)
     txt_msg.then(bot, [chatbot], [chatbot])
-    txt_msg.then(lambda: gr.Textbox(interactive=True), None, [txt], queue=False)
+    txt_msg.then(lambda: gr.Textbox(interactive=True), None, [txt], queue=use_queue)
     
-    file_msg = upload_btn.upload(add_file, [chatbot, upload_btn], [chatbot], queue=False)
+    file_msg = upload_btn.upload(add_files, [chatbot, upload_btn], [chatbot], queue=use_queue)
     file_msg.then(bot, chatbot, chatbot)
 
     chatbot.like(print_like_dislike, None, None)
-
 
 demo.queue()
 if __name__ == "__main__":

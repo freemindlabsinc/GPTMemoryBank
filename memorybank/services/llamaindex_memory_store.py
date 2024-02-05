@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional
 from injector import inject
 from llama_index import Response
+
 from memorybank.abstractions.memory_store import MemoryStore
 from memorybank.models.api import QueryResult
 from memorybank.models.models import Document, DocumentMetadataFilter, Query
@@ -48,10 +49,19 @@ class LlamaIndexMemoryStore(MemoryStore):
         Takes in a list of list of document chunks and inserts them into the database.
         Return a list of document ids.
         """
-        idx = await self.index_factory.get_vector_index()
-        res = idx.refresh_ref_docs(documents=documents)
-        
-        return res
+        try:
+            idx = await self.index_factory.get_vector_index()
+            
+            res = idx.refresh_ref_docs(documents=documents)
+            
+            # get all ids from documents
+            ids = []
+            for doc in documents:
+                ids.append(doc.doc_id)
+                        
+            return ids
+        except Exception as e:
+            return []
 
     async def delete(
         self,

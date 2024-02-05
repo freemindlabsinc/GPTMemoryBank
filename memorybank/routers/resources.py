@@ -1,4 +1,5 @@
 import os, uuid, hashlib
+import tempfile
 from pathlib import Path
 import shutil
 from fastapi_injector import Injected
@@ -32,18 +33,15 @@ async def upsert_files(
     memory_store: MemoryStore = Injected(MemoryStore),):
         
     try:
-        docs = _convert_uploaded_files_to_chunks(files)
-            
-        ids = [generate_id(
-            doc=doc,
-            prefix="DOC_",
-            # generates the id by MD5ing the actual text
-            generator = lambda: hashlib.md5(doc.text.encode('utf-8')).hexdigest()) for doc in docs]
+        docs = _convert_uploaded_files_to_chunks(files)                    
         
         res = await memory_store.upsert(docs)
-        successful_ids = [id for id, success in zip(ids, res) if success]
+        
+        ids = []
+        for doc in docs:
+            id = doc.id_                
             
-        return UpsertResponse(ids=successful_ids)  
+        return UpsertResponse(ids=ids)  
     
     except Exception as e:
         logger.error(e)
@@ -66,7 +64,9 @@ async def upsert_docs(
         docs = request.documents
         
         # Generates the ids for the documents using a GUID
-        ids = [generate_id(doc=doc, prefix="DOC_", generator=lambda: str(uuid.uuid4())) for doc in docs]
+        #ids = [generate_id(doc=doc, prefix="DOC_", generator=lambda: str(uuid.uuid4())) for doc in docs]
+        
+        ids = [doc.metadata["file_name"] for doc in docs]
         
         res = await memory_store.upsert(docs)
         
@@ -106,30 +106,39 @@ def delete(document_ids: List[str]):
 def generate_id(doc : Document, prefix: str, generator: str):
     tmp = generator()
     #doc.id_ = doc.metadata["file_name"]    
-    hash = hashlib.md5(doc.text.encode('utf-8')).hexdigest()
-    doc.id_ = prefix + tmp
+    #hash = hashlib.md5(doc.text.encode('utf-8')).hexdigest()
+    #doc.doc_id = prefix + tmp
+    #doc.metadata["doc_hash"] = hash
     
     return doc.id_
 
+def store_bytes_as_temp_file(byte_data):
+    # Create a temporary file and write the byte data to it
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(byte_data)
+    
+    # Return the name of the temporary file
+    return temp_file.name
+    
+def store_uploaded_files(files: List[UploadFile]) -> List[str]:
+    file_names = []
+    for file in files:
+        file_location = store_bytes_as_temp_file(file.file.read())
+        file_names.append(file_location)
+        
+        logger.info(f"Generated temporary file: {file.filename} at {file_location}")
+        
+    return file_names
+
 def _convert_uploaded_files_to_chunks(files: List[UploadFile]) -> List[Document]:    
     # Stores the files in a temp directory. Hack or the way?
-    path_name = "./.uploads"
-    try:
-        if (not os.path.exists(path_name)):
-            logger.warning(f"Creating directory: {path_name}")
-            os.mkdir(path_name)
-                    
-        #folder = Path(path_name)
-        #refs = folder.glob("*")
-        #for ref in refs:
-        #    logger.info(f"Found: {ref}")            
-            
-        for file in files:        
-            _store_uploaded_file(path_name, file)
+    try:        
+        file_names = store_uploaded_files(files)
             
         # Parses the files in the temp directory and returns a List[Document] from the files
         chunks = SimpleDirectoryReader(
-            input_dir= path_name,
+            input_files=file_names,
+            filename_as_id=True,
             exclude_hidden=False).load_data(
                 show_progress=True,
                 num_workers=1,)
@@ -141,15 +150,6 @@ def _convert_uploaded_files_to_chunks(files: List[UploadFile]) -> List[Document]
         raise HTTPException(status_code=500, detail="Internal Service Error")
     
     finally:        
-        if (os.path.exists(path_name)):
-            shutil.rmtree(path_name)        
-    
-def _store_uploaded_file(path_name: str, file: UploadFile):
-    logger.info(f"Upserting file: {file.filename}")
-        
-    file_location = f"{path_name}/{file.filename}"
-    
-    with open(file_location, "wb+") as file_object:
-        file_object.write(file.file.read())
-        
-    return file_location    
+        # delete temporary files
+        for file in file_names:
+            os.remove(file)    
