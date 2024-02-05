@@ -81,7 +81,7 @@ async def add_files(history, file_list):
             file_paths.append(f)
             history = history + [(f"#Consider {f} uploaded...", None)]            
             
-        chunks = SimpleDirectoryReader(
+        chunks = SimpleDirectoryReader(            
                 input_files=file_list,
                 filename_as_id=True,
                 exclude_hidden=False).load_data(

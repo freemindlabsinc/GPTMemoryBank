@@ -139,32 +139,3 @@ class LlamaIndexIndexFactory(IndexFactory):
             show_progress=True)
         
         return index
-        
-        if (not os.path.exists(persist_directory)):
-            os.mkdir(persist_directory)
-            docs = []
-            #docs = SimpleDirectoryReader("./docs").load_data(show_progress=True) # DEBUG
-            
-            index = VectorStoreIndex.from_documents(
-                docs, 
-                service_context=self.service_context, # service_context ref
-                storage_context=self.storage_context, 
-                show_progress=True)            
-            
-            storage_context.persist(persist_dir=persist_directory)                
-        else:            
-            index= VectorStoreIndex.from_vector_store(
-                vector_store=self.vector_store,
-                service_context=self.service_context,
-                show_progress=True   
-            )
-            
-            index = load_index_from_storage(
-                storage_context=storage_context,            
-                show_progress=True,
-                
-                # NOTE kwargs for the index is kind of ugly. See https://github.com/run-llama/llama_index/issues/1974
-                service_context = self.service_context
-                )
-            
-        return index
