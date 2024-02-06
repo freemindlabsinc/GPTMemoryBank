@@ -38,7 +38,7 @@ class LlamaIndexIndexFactory(IndexFactory):
         self.vector_store = self._create_vector_store()
         self.storage_context =self._create_storage_context
         self.service_context = self._create_service_context() 
-        
+        self.vector_index = self.create_vector_index()
         
     def _create_elasticsearch_client(self) -> AsyncElasticsearch:
         logger.debug("Creating Elasticsearch client...")
@@ -137,8 +137,8 @@ class LlamaIndexIndexFactory(IndexFactory):
         
         return storage_context
 
-    async def get_vector_index(self) -> VectorStoreIndex:                
-        logger.debug("Getting vector index...")
+    def create_vector_index(self) -> VectorStoreIndex:                
+        logger.debug("Creating vector index...")
 
         # Instantiate the Elasticsearch client
         index = VectorStoreIndex.from_vector_store(
@@ -147,3 +147,9 @@ class LlamaIndexIndexFactory(IndexFactory):
             show_progress=True)
         
         return index
+
+    async def get_vector_index(self) -> VectorStoreIndex:                
+        logger.debug("Getting vector index...")
+
+        # Instantiate the Elasticsearch client
+        return self.vector_index

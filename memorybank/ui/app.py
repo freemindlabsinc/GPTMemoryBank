@@ -19,29 +19,19 @@ logger.debug("Launching UI")
 import gradio as gr
 
 async def query_llama_index(message: str) -> str:
-    #await asyncio.sleep(2)  # simulate a long-running task
+    # TODO add try/catch
     if message is None or message == "":
         return "No question provided."        
     
-    # TODO try-catch
-    qry = Query(
-        text=message,
-        filter=None,
-        top_k=3
-    )
-    
-    results = await memory_store.query([qry])
-    
-    first_response = results[0]
-    response_text = first_response.answer
-    response_links = first_response.formatted_sources
-    
+    response = await memory_store.query(
+        Query(text=message, filter=None, top_k=3))
+        
     full_response = f"""
-**Response**:
-{response_text}
+**Response:**
+{response.answer}
 
-### Links:
-{response_links}
+*Links:*
+{response.formatted_sources}
 """
     
     logger.debug(f"Message: {message}\nResponse: {full_response}")
@@ -53,23 +43,18 @@ def print_like_dislike(x: gr.LikeData):
 
 async def add_files(history, file_list):    
     try:
-        file_paths = []        
+        res = await memory_store.upload(
+            file_names=file_list,
+            chunk_token_size=None,)
         
-        for f in file_list:                 
-            file_paths.append(f)
-            history = history + [(f"#Consider {f} uploaded...", None)]            
-            
-        from llama_index import SimpleDirectoryReader
-        chunks = SimpleDirectoryReader(            
-                input_files=file_list,
-                filename_as_id=True,
-                exclude_hidden=False).load_data(
-                    show_progress=True)
-                
-        res = await memory_store.upsert(chunks)
+        only_filenames = [os.path.basename(f) for f in file_list]
+        
+        usr_msg = f"Upload {only_filenames}..."
+        
+        history = history + [(usr_msg, f"Uploaded {len(file_list)} file(s) and generated {len(res)} document chunks.")]
             
     except Exception as e:
-        history = history + [(f"Error: {e}", None)]
+        history = history + [(usr_msg, f"Error: {e}")]
     finally:
         return history
 
@@ -93,20 +78,19 @@ async def bot(history):
     try:
         if len(history) == 0:
             return history
-        answered = history[-1][1] is not None
-        if answered:
-            return history
-            
-        question = history[-1][0]
         
-        if question.startswith("#"):
+        bot_response = history[-1][1] is not None
+        if bot_response:
             return history
         
+        user_question = history[-1][0]
+                    
         try:
-            response = await query_llama_index(question)
+            response = await query_llama_index(user_question)
         except Exception as e:
             response = f"Error: {e}"
-            
+        
+        # sets the bot response
         history[-1][1] = response        
     
     except Exception as e:
@@ -139,6 +123,7 @@ def _create_textbox():
         scale=4,
         show_label=False,
         placeholder="Enter text and press enter, or upload a text file or audio file.",
+        value="What is carbon?",
         container=False,
         interactive=True,
     )

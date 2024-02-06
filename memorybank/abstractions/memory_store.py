@@ -6,7 +6,7 @@ from injector import inject
 
 class MemoryStore(ABC):
     @abstractmethod
-    async def query(self, queries: List[Query]) -> List[QueryResult]:
+    async def query(self, query: Query) -> QueryResult:
         """
         Takes in a list of queries and filters and returns a list of query results with matching document chunks and scores.
         """
@@ -23,6 +23,13 @@ class MemoryStore(ABC):
         Return a list of document ids.
         """
         raise NotImplementedError
+    
+    @abstractmethod
+    async def upload(self,
+                     file_names: List[str],
+                     chunk_token_size: Optional[int] = None) -> List[str]:
+        
+        pass
         
     @abstractmethod
     async def delete(
