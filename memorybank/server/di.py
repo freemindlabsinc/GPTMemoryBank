@@ -1,5 +1,7 @@
 from injector import Injector, singleton
+
 from memorybank.abstractions.memory_store import MemoryStore
+from memorybank.abstractions.transcriber import Transcriber
 from memorybank.services.llamaindex_index_factory import LlamaIndexIndexFactory
 from memorybank.services.llamaindex_memory_store import LlamaIndexMemoryStore
 
@@ -15,6 +17,7 @@ def _create_application_injector() -> Injector:
     
     # Services
     _injector.binder.bind(IndexFactory, to=LlamaIndexIndexFactory, scope=singleton)
+    _injector.binder.bind(Transcriber, to=Transcriber, scope=singleton)
     _injector.binder.bind(MemoryStore, to=LlamaIndexMemoryStore, scope=singleton)
     
     return _injector

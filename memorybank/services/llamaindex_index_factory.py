@@ -1,23 +1,19 @@
 from loguru import logger
-import os
-from elasticsearch import AsyncElasticsearch
-from injector import inject
-from memorybank.settings.app_settings import AppSettings
-from memorybank.settings.embeddings_settings import EmbeddingType
 
 from elasticsearch import AsyncElasticsearch
-from llama_index import (Document, ServiceContext, SimpleDirectoryReader, VectorStoreIndex)
-from llama_index.llms import OpenAI
-from llama_index import set_global_handler
-from llama_index.embeddings import HuggingFaceEmbedding    
+from injector import inject
+
+from llama_index.llms import (AzureOpenAI, OpenAI)
+from llama_index.embeddings import (AzureOpenAIEmbedding, HuggingFaceEmbedding)
 from llama_index.vector_stores import (ElasticsearchStore)
 from llama_index.storage.storage_context import (StorageContext)
-from llama_index.storage.docstore import (SimpleDocumentStore)
-from llama_index.storage.index_store import (SimpleIndexStore)
-from llama_index import (
-    load_index_from_storage,
-    load_indices_from_storage,
-    load_graph_from_storage,
+
+from llama_index import (ServiceContext, 
+                         VectorStoreIndex,
+                         set_global_handler,
+                         load_index_from_storage,
+                         load_indices_from_storage,
+                         load_graph_from_storage,
 )
 
 from llama_index.callbacks import (
@@ -25,9 +21,8 @@ from llama_index.callbacks import (
     LlamaDebugHandler
 )
 
-from llama_index.llms import AzureOpenAI
-from llama_index.embeddings import AzureOpenAIEmbedding
-
+from memorybank.settings.app_settings import AppSettings
+from memorybank.settings.embeddings_settings import EmbeddingType
 from memorybank.abstractions.index_factory import IndexFactory
 
 class LlamaIndexIndexFactory(IndexFactory):
@@ -46,6 +41,8 @@ class LlamaIndexIndexFactory(IndexFactory):
         
         
     def _create_elasticsearch_client(self) -> AsyncElasticsearch:
+        logger.debug("Creating Elasticsearch client...")
+        
         # Instantiate the Elasticsearch client        
         es_client = AsyncElasticsearch(
             [self.app_settings.elasticsearch.url],
@@ -58,6 +55,8 @@ class LlamaIndexIndexFactory(IndexFactory):
         return es_client
 
     def _create_embedding_model(self):    
+        logger.debug("Creating embedding model...")
+        
         model_name = self.app_settings.embeddings.model
         model_type = self.app_settings.embeddings.type
         
@@ -79,10 +78,14 @@ class LlamaIndexIndexFactory(IndexFactory):
         return embed_model    
     
     def _create_callback_manager(self):
+        logger.debug("Creating callback manager...")
+        
         llama_debug = LlamaDebugHandler(print_trace_on_end=True)
         callback_manager = CallbackManager([llama_debug])
         
     def _create_llm(self):
+        logger.debug("Creating LLM...")
+        
         if self.app_settings.openai.api_key is not None:
             ai_config = self.app_settings.openai
             
@@ -104,6 +107,7 @@ class LlamaIndexIndexFactory(IndexFactory):
         return llm
     
     def _create_service_context(self) -> ServiceContext:        
+        logger.debug("Creating service context...")
         
         service_context = ServiceContext.from_defaults(
             llm=self.llm,
@@ -114,6 +118,8 @@ class LlamaIndexIndexFactory(IndexFactory):
         return service_context
     
     def _create_vector_store(self) -> ElasticsearchStore:
+        logger.debug("Creating vector store...")
+        
         es_vector_store = ElasticsearchStore(
             index_name= self.app_settings.elasticsearch.default_index,
             es_client=self.es_client,               
@@ -122,6 +128,8 @@ class LlamaIndexIndexFactory(IndexFactory):
         return es_vector_store
 
     def _create_storage_context(self) -> StorageContext:
+        logger.debug("Creating storage context...")
+        
         persist_directory = "./.persistDir"
         storage_context = StorageContext.from_defaults(            
             persist_dir=persist_directory,

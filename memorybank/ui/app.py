@@ -1,42 +1,22 @@
-import asyncio
-from fastapi_injector import Injected
-from llama_index import Document, SimpleDirectoryReader, VectorStoreIndex
-import numpy as np
+import os
 from loguru import logger
+logger.debug("Starting application...")
 
-import gradio as gr
-from transformers import pipeline
 from memorybank.abstractions.memory_store import MemoryStore
+from memorybank.abstractions.transcriber import Transcriber
 from memorybank.models.models import Query
 
 from memorybank.server.di import setup_services
-from memorybank.abstractions.index_factory import IndexFactory
 from memorybank.settings.app_settings import AppSettings
 
 injector = setup_services()
 appSettings:AppSettings = injector.get(AppSettings)
 memory_store:MemoryStore = injector.get(MemoryStore)
+transcriber:Transcriber = injector.get(Transcriber)
 
-logger.debug("Creating speech recognition pipeline")
-transcriber = pipeline("automatic-speech-recognition", model="openai/whisper-base.en")
-
+# -------------------------
 logger.debug("Launching UI")
-
-# UI stuff
-
 import gradio as gr
-import os
-
-# Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
-# UI stuff
-
-def _transcribe(audio):
-    sr, y = audio
-    y = y.astype(np.float32)
-    y /= np.max(np.abs(y))
-
-    txt = transcriber({"sampling_rate": sr, "raw": y})["text"]
-    return txt
 
 async def query_llama_index(message: str) -> str:
     #await asyncio.sleep(2)  # simulate a long-running task
@@ -79,6 +59,7 @@ async def add_files(history, file_list):
             file_paths.append(f)
             history = history + [(f"#Consider {f} uploaded...", None)]            
             
+        from llama_index import SimpleDirectoryReader
         chunks = SimpleDirectoryReader(            
                 input_files=file_list,
                 filename_as_id=True,
@@ -92,17 +73,15 @@ async def add_files(history, file_list):
     finally:
         return history
 
-
 def add_text(history, text):    
     history = history + [(text, None)]
     
     return history, gr.Textbox(value="", interactive=False)
 
-
 def add_audio(history, audio):
     if audio is not None:    
         try:    
-            transcribed_msg = _transcribe(audio)
+            transcribed_msg = transcriber.transcribe(audio)
         except Exception as e:
             transcribed_msg = f"Error: {e}"
         
@@ -137,7 +116,6 @@ async def bot(history):
         return history
     
 
-
 CSS ="""
 .contain { display: flex; flex-direction: column; }
 .gradio-container { height: 100vh !important; }
@@ -162,6 +140,7 @@ def _create_textbox():
         show_label=False,
         placeholder="Enter text and press enter, or upload a text file or audio file.",
         container=False,
+        interactive=True,
     )
     
 def _create_upload_button():
@@ -169,6 +148,7 @@ def _create_upload_button():
         "📁 Upload", 
         file_types=["text", "audio"],
         file_count="multiple",            
+        interactive=True,
     )
 
 with gr.Blocks(title="Memory Bank by Free Mind Labs", css=CSS) as demo:    
@@ -177,7 +157,7 @@ with gr.Blocks(title="Memory Bank by Free Mind Labs", css=CSS) as demo:
         label = "Memory Bank",
         elem_id="chatbot",
         bubble_full_width=False,
-        avatar_images=(None, (os.path.join(os.path.dirname(__file__), "icon.png"))),
+        avatar_images=(None, (os.path.join(os.path.dirname(__file__), "icon.png")))
         #examples=["What do you know of the moon?", "Tell me about Pyhton", "What is the application Magic?"],        
     )
         
@@ -188,6 +168,7 @@ with gr.Blocks(title="Memory Bank by Free Mind Labs", css=CSS) as demo:
     with gr.Row():
         audio = _create_audio()
 
+    # chatbox.value1, value2 --> function add_audio() --> the results are passed back t
     audio_msg = audio.change(add_audio, [chatbot, audio], [chatbot, audio], queue=use_queue)
     audio_msg.then(bot, [chatbot], [chatbot])                 
     audio_msg.then(_create_audio, None, [audio], queue=use_queue)
