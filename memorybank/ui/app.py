@@ -18,25 +18,28 @@ transcriber:Transcriber = injector.get(Transcriber)
 logger.debug("Launching UI")
 import gradio as gr
 
-async def query_llama_index(message: str) -> str:
-    # TODO add try/catch
-    if message is None or message == "":
-        return "No question provided."        
-    
-    response = await memory_store.query(
-        Query(text=message, filter=None, top_k=3))
+async def run_query(message: str) -> str:
+    try:    
+        if message is None or message == "":
+            return "No question provided."        
         
-    full_response = f"""
+        response = await memory_store.query(
+            Query(text=message, filter=None, top_k=3))
+            
+        full_response = f"""
 **Response:**
 {response.answer}
 
 *Links:*
 {response.formatted_sources}
 """
+        
+        logger.debug(f"Message: {message}\nResponse: {full_response}")
+        
+        return full_response
     
-    logger.debug(f"Message: {message}\nResponse: {full_response}")
-    
-    return full_response
+    except Exception as e:
+      return f"Error: {e}"        
 
 def print_like_dislike(x: gr.LikeData):
     print(x.index, x.value, x.liked)
@@ -86,7 +89,7 @@ async def bot(history):
         user_question = history[-1][0]
                     
         try:
-            response = await query_llama_index(user_question)
+            response = await run_query(user_question)
         except Exception as e:
             response = f"Error: {e}"
         
