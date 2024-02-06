@@ -77,7 +77,9 @@ class LlamaIndexMemoryStore(MemoryStore):
             idx = await self.index_factory.get_vector_index()
             
             # refresh_ref_docs calls insert which then runs the conversion pipeline
-            res = idx.refresh_ref_docs(documents=documents)
+            res = idx.refresh_ref_docs(
+                documents=documents,
+                update_kwargs={"delete_kwargs": {"delete_from_docstore": True}})
             
             # get all ids from documents
             ids = []
@@ -94,5 +96,9 @@ class LlamaIndexMemoryStore(MemoryStore):
         filter: Optional[DocumentMetadataFilter] = None,
         delete_all: Optional[bool] = None,
     ) -> bool:
+        
+        idx = await self.index_factory.get_vector_index()
+        idx.dele
+        
         return True
     
