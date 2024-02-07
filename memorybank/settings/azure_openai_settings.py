@@ -1,4 +1,4 @@
-from memorybank.settings.openai_Settings import OpenAISettings
+from memorybank.settings.openai_settings import OpenAISettings
 from pydantic import Field
 
 class AzureOpenAISettings(OpenAISettings):

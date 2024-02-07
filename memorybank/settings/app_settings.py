@@ -5,7 +5,8 @@ from memorybank.settings.azure_openai_settings import AzureOpenAISettings
 from memorybank.settings.azure_queues_settings import AzureQueuesSettings
 from memorybank.settings.elasticsearch_settings import ElasticsearchSettings
 from memorybank.settings.embeddings_settings import EmbeddingsSettings
-from memorybank.settings.openai_Settings import OpenAISettings
+from memorybank.settings.openai_settings import OpenAISettings
+from memorybank.settings.prompt_settings import PromptSettings
 from memorybank.settings.redis_settings import REDISSettings
 from memorybank.settings.service_settings import ServiceSettings
 
@@ -13,6 +14,10 @@ class AppSettings(BaseModel):
     service: ServiceSettings = Field(
         default=ServiceSettings(),
         description="Service settings."
+    )
+    prompt: PromptSettings = Field(
+        default=PromptSettings(),
+        description="Prompt settings."
     )
     embeddings: EmbeddingsSettings = Field(
         default=EmbeddingsSettings(),

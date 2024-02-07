@@ -87,7 +87,15 @@ async def bot(history):
             return history
         
         user_question = history[-1][0]
-                    
+        if (user_question is None or user_question == ""):
+            if (appSettings.prompt.debug_question is None or appSettings.prompt.debug_question == ""):
+                logger.debug("No user question provided. Nothing to do.")
+                history[-1][1] = "Please provide a question."
+                return
+            else:
+                user_question = appSettings.prompt.debug_question
+                logger.debug(f"No user question provided. Using debug question '{user_question}'.")                
+            
         try:
             response = await run_query(user_question)
         except Exception as e:
@@ -107,8 +115,10 @@ CSS ="""
 .contain { display: flex; flex-direction: column; }
 .gradio-container { height: 100vh !important; }
 #component-0 { height: 100%; }
-#chatbot { flex-grow: 1; overflow: auto;}
-footer {visibility: hidden}
+#chatbot { flex-grow: 1; overflow: auto; }
+#audio { flex-grow: 1; overflow: auto; }
+#textbox { flex-grow: 1; overflow: auto; }
+footer { visibility: hidden; }
 """
 use_queue = True
 
@@ -116,17 +126,19 @@ def _create_audio():
     return gr.Audio(
         label="🎤 Record or upload audio files...",
         sources=["microphone", "upload"], 
+        elem_id="audio",
         show_download_button=True,
         editable=True,
         interactive=True,         
         show_label=True)
     
 def _create_textbox():
+    
     return gr.Textbox(
         scale=4,
+        elem_id="textbox",
         show_label=False,
         placeholder="Enter text and press enter, or upload a text file or audio file.",
-        value="What is carbon?",
         container=False,
         interactive=True,
     )
@@ -139,27 +151,27 @@ def _create_upload_button():
         interactive=True,
     )
 
-with gr.Blocks(title="Memory Bank by Free Mind Labs", css=CSS) as demo:    
+with gr.Blocks(title=appSettings.service.name, css=CSS) as demo:    
     chatbot = gr.Chatbot(
-        [],
-        label = "Memory Bank",
+        [(None, appSettings.prompt.first_prompt)],
+        #label = "Chat",
         elem_id="chatbot",
         bubble_full_width=False,
-        avatar_images=(None, (os.path.join(os.path.dirname(__file__), "icon.png")))
-        #examples=["What do you know of the moon?", "Tell me about Pyhton", "What is the application Magic?"],        
+        # FIXME this shows the file path
+        avatar_images=(None, (os.path.join(os.path.dirname(__file__), "icon.png")))        
     )
         
     with gr.Row():
         txt = _create_textbox()
         upload_btn = _create_upload_button()
     
-    with gr.Row():
-        audio = _create_audio()
+    #with gr.Row():
+    #    audio = _create_audio()
 
     # chatbox.value1, value2 --> function add_audio() --> the results are passed back t
-    audio_msg = audio.change(add_audio, [chatbot, audio], [chatbot, audio], queue=use_queue)
-    audio_msg.then(bot, [chatbot], [chatbot])                 
-    audio_msg.then(_create_audio, None, [audio], queue=use_queue)
+    #audio_msg = audio.change(add_audio, [chatbot, audio], [chatbot, audio], queue=use_queue)
+    #audio_msg.then(bot, [chatbot], [chatbot])                 
+    #audio_msg.then(_create_audio, None, [audio], queue=use_queue)
     
     # chatbot --> history list
     # txt -> current edit box text
@@ -175,5 +187,5 @@ with gr.Blocks(title="Memory Bank by Free Mind Labs", css=CSS) as demo:
 
 demo.queue()
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(share=True)
 
