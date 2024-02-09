@@ -1,10 +1,8 @@
-import os
-from loguru import logger
-logger.debug("Starting application...")
+import gradio as gr
 
-        
 from llama_index.vector_stores.types import VectorStoreQueryMode
-from llama_index.response_synthesizers.type import ResponseMode        
+from llama_index.response_synthesizers.type import ResponseMode
+from loguru import logger
 
 from memorybank.abstractions.memory_store import MemoryStore
 from memorybank.abstractions.transcriber import Transcriber
@@ -13,17 +11,12 @@ from memorybank.models.models import Query
 from memorybank.server.di import setup_services
 from memorybank.settings.app_settings import AppSettings
 
+
 injector = setup_services()
 appSettings:AppSettings = injector.get(AppSettings)
 memory_store:MemoryStore = injector.get(MemoryStore)
 transcriber:Transcriber = injector.get(Transcriber)
-
-# -------------------------
-logger.debug("Launching UI")
-import gradio as gr
-
-# FIXME Global variable to store the last question asked
-last_query = None
+use_queue = True
 
 async def run_query(
     message: str, 
@@ -139,16 +132,36 @@ async def bot(history, top_k: int, response_mode: ResponseMode, vector_query_mod
         return history
     
 
-CSS ="""
-.contain { display: flex; flex-direction: column; }
-.gradio-container { height: 100vh !important; }
-#component-0 { height: 100%; }
-#chatbot { flex-grow: 1; overflow: auto; }
-#audio { flex-grow: 1; overflow: auto; }
-#textbox { flex-grow: 1; overflow: auto; }
-footer { visibility: hidden; }
-"""
-use_queue = True
+def create_chat_tab():
+    with gr.Blocks() as tab:    
+        chatbot = _create_chatbot()        
+            
+        with gr.Row():
+            txt = _create_textbox()
+            upload_btn = _create_upload_button()
+            clear_btn = _create_clear_button(chatbot, txt)
+        
+        with gr.Row():                
+            top_k_number = _create_topk_control()        
+            response_mode = _create_response_mode_dropdown()        
+            vector_query_mode = _create_vectorstore_query_mode()
+            
+        # chatbox.value1, value2 --> function add_audio() --> the results are passed back t
+        #audio_msg = audio.change(add_audio, [chatbot, audio], [chatbot, audio], queue=use_queue)
+        #audio_msg.then(bot, [chatbot], [chatbot])                 
+        #audio_msg.then(_create_audio, None, [audio], queue=use_queue)
+        
+        txt_msg = txt.submit(add_text, [chatbot, txt], [chatbot, txt], queue=use_queue)
+        txt_msg.then(bot, [chatbot, top_k_number, response_mode, vector_query_mode], [chatbot])
+        txt_msg.then(_create_textbox, None, [txt], queue=use_queue)
+        
+        file_msg = upload_btn.upload(add_files, [chatbot, upload_btn], [chatbot], queue=use_queue)
+        file_msg.then(bot, [chatbot, top_k_number, response_mode, vector_query_mode], [chatbot])
+
+        chatbot.like(print_like_dislike, None, None)    
+    pass
+
+
 
 def _create_audio():
     return gr.Audio(
@@ -229,35 +242,3 @@ def _create_vectorstore_query_mode():
 
 def _create_clear_button(chatbot, txt):
     return gr.ClearButton([txt, chatbot])
-
-with gr.Blocks(title=appSettings.service.name, css=CSS) as demo:    
-    chatbot = _create_chatbot()        
-        
-    with gr.Row():
-        txt = _create_textbox()
-        upload_btn = _create_upload_button()
-        clear_btn = _create_clear_button(chatbot, txt)
-    
-    with gr.Row():                
-        top_k_number = _create_topk_control()        
-        response_mode = _create_response_mode_dropdown()        
-        vector_query_mode = _create_vectorstore_query_mode()
-        
-    # chatbox.value1, value2 --> function add_audio() --> the results are passed back t
-    #audio_msg = audio.change(add_audio, [chatbot, audio], [chatbot, audio], queue=use_queue)
-    #audio_msg.then(bot, [chatbot], [chatbot])                 
-    #audio_msg.then(_create_audio, None, [audio], queue=use_queue)
-    
-    txt_msg = txt.submit(add_text, [chatbot, txt], [chatbot, txt], queue=use_queue)
-    txt_msg.then(bot, [chatbot, top_k_number, response_mode, vector_query_mode], [chatbot])
-    txt_msg.then(_create_textbox, None, [txt], queue=use_queue)
-    
-    file_msg = upload_btn.upload(add_files, [chatbot, upload_btn], [chatbot], queue=use_queue)
-    file_msg.then(bot, [chatbot, top_k_number, response_mode, vector_query_mode], [chatbot])
-
-    chatbot.like(print_like_dislike, None, None)
-
-demo.queue()
-if __name__ == "__main__":
-    demo.launch()#share=True)
-

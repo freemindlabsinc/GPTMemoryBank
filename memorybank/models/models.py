@@ -2,6 +2,9 @@ from pydantic import BaseModel
 from typing import List, Optional
 from enum import Enum
 
+# should me moved elsewhere
+from llama_index.vector_stores.types import VectorStoreQueryMode
+from llama_index.response_synthesizers.type import ResponseMode        
 
 class Source(str, Enum):
     email = "email"
@@ -42,7 +45,9 @@ class DocumentMetadataFilter(BaseModel):
 class Query(BaseModel):
     text: str
     filter: Optional[DocumentMetadataFilter] = None
-    top_k: Optional[int] = 3
+    top_k: Optional[int] = 3,
+    response_mode: Optional[ResponseMode] = ResponseMode.COMPACT_ACCUMULATE,
+    query_mode: Optional[VectorStoreQueryMode]  = VectorStoreQueryMode.DEFAULT,
 
 class QueryResult(BaseModel):
     query: Query

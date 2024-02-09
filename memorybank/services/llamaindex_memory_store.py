@@ -2,7 +2,14 @@ from elasticsearch import NotFoundError
 from loguru import logger
 from typing import Dict, List, Optional
 from injector import inject
+
 from llama_index import (Response, SimpleDirectoryReader)
+from llama_index.retrievers import (VectorIndexRetriever)
+from llama_index.response_synthesizers import get_response_synthesizer
+from llama_index.query_engine import (RetrieverQueryEngine)
+from llama_index.vector_stores.types import VectorStoreQueryMode
+from llama_index.response_synthesizers.type import ResponseMode
+
 from memorybank.abstractions.memory_store import MemoryStore
 from memorybank.models.api import QueryResult
 from memorybank.models.models import Document, DocumentMetadataFilter, Query
@@ -34,12 +41,43 @@ class LlamaIndexMemoryStore(MemoryStore):
         idx = await self.index_factory.get_vector_index()
         
         try:            
-            logger.debug(f"Querying for '{query}'...")                
+            logger.debug(f"Querying for '{query}'. vector_store_query_mode={query.query_mode}, response_mode={query.response_mode}...")
+                        
+            #query_engine = idx.as_query_engine()            
+            retriever = VectorIndexRetriever(
+                #vector_store_query_mode=query.query_mode or VectorStoreQueryMode.DEFAULT,
+                vector_store_query_mode=query.query_mode,
+                #filters=MetadataFilters(),
+                #alpha = float,                                
+                callback_manager=idx.service_context.callback_manager,
+                verbose=True,
+                index = idx,
+                similarity_top_k=query.top_k,                
+            )
             
-            query_engine = idx.as_query_engine()            
+            synth = get_response_synthesizer(
+                #response_mode=query.response_mode or ResponseMode.COMPACT_ACCUMULATE,
+                response_mode=query.response_mode,
+                callback_manager=idx.service_context.callback_manager,
+                service_context=idx.service_context,
+                #text_qa_template=
+                #refine_template=
+                #summary_template=
+                #simple_template=
+                #use_async=
+                #streaming=
+                #structured_answer_filtering=
+                #output_cls=
+            )
+            
+            query_engine = RetrieverQueryEngine(
+                callback_manager=idx.service_context.callback_manager,
+                retriever=retriever,
+                response_synthesizer=synth,
+            )
+            
             response = await query_engine.aquery(query.text)
-            # FIXME where to store top_k=query.top_k, filter=query.filter)?
-        
+                        
             logger.debug(f"Query response: {response}")
         
             return QueryResult(
