@@ -1,3 +1,4 @@
+import os
 import gradio as gr
 
 from llama_index.vector_stores.types import VectorStoreQueryMode
@@ -159,7 +160,8 @@ def create_chat_tab():
         file_msg.then(bot, [chatbot, top_k_number, response_mode, vector_query_mode], [chatbot])
 
         chatbot.like(print_like_dislike, None, None)    
-    pass
+
+        return tab
 
 
 

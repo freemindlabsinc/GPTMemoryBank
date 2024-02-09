@@ -13,6 +13,8 @@ from memorybank.models.models import Query
 from memorybank.server.di import setup_services
 from memorybank.settings.app_settings import AppSettings
 
+from memorybank.ui.chat_tab import create_chat_tab
+
 injector = setup_services()
 appSettings:AppSettings = injector.get(AppSettings)
 memory_store:MemoryStore = injector.get(MemoryStore)
@@ -25,119 +27,6 @@ import gradio as gr
 # FIXME Global variable to store the last question asked
 last_query = None
 
-async def run_query(
-    message: str, 
-    top_k: int, 
-    response_mode: ResponseMode, 
-    vector_query_mode: VectorStoreQueryMode) -> str:
-    global last_query  # Declare the global variable inside the function
-    try:    
-        if message is None or message == "":
-            if last_query is not None:
-                message = last_query  # Set the current question to the last one if it's not None
-            else:
-                return "No question provided."        
-        else:
-            last_query = message  # Update the last question if the current one is not empty
-
-        query = Query(text=message)
-        query.top_k = top_k
-        vector_query_mode = VectorStoreQueryMode[vector_query_mode]
-        query.query_mode = vector_query_mode
-        
-        response_mode = ResponseMode[response_mode]
-        query.response_mode = response_mode
-        
-        response = await memory_store.query(query)
-            
-        full_response = f"""
-**Answer**
-{response.answer}
-
-**Links**
-{response.formatted_sources}
-
-**Query**
-```
-{query}
-```
-"""
-        
-        logger.debug(f"Message: {message}\nResponse: {full_response}")
-        
-        return full_response
-    
-    except Exception as e:
-      return f"Error: {e}"        
-
-def print_like_dislike(x: gr.LikeData):
-    print(x.index, x.value, x.liked)
-
-async def add_files(history, file_list):    
-    try:
-        res = await memory_store.upload(
-            file_names=file_list,
-            chunk_token_size=None,)
-        
-        only_filenames = [os.path.basename(f) for f in file_list]
-        
-        usr_msg = f"Upload {only_filenames}..."
-        
-        history = history + [(usr_msg, f"Uploaded {len(file_list)} file(s) and generated {len(res)} document chunks.")]
-            
-    except Exception as e:
-        history = history + [(usr_msg, f"Error: {e}")]
-    finally:
-        return history
-
-def add_text(history, text):    
-    history = history + [(text, None)]
-    
-    return history, gr.Textbox(value="", interactive=False)
-
-def add_audio(history, audio):
-    if audio is not None:    
-        try:    
-            transcribed_msg = transcriber.transcribe(audio)
-        except Exception as e:
-            transcribed_msg = f"Error: {e}"
-        
-        history = history + [(transcribed_msg, None)]
-        
-    return history, gr.Audio(sources=["microphone"])
-
-async def bot(history, top_k: int, response_mode: ResponseMode, vector_query_mode: VectorStoreQueryMode):
-    try:
-        if len(history) == 0:
-            return history
-        
-        bot_response = history[-1][1] is not None
-        if bot_response:
-            return history
-        
-        user_question = history[-1][0]
-        if (user_question == ""):
-            user_question = last_query
-                    
-            
-        try:
-            response = await run_query(
-                message=user_question, 
-                top_k=top_k, 
-                response_mode=response_mode, 
-                vector_query_mode=vector_query_mode)
-        except Exception as e:
-            response = f"Error: {e}"
-        
-        # sets the bot response
-        history[-1][1] = response        
-    
-    except Exception as e:
-        history = history + [(f"Error: {e}", None)]
-    
-    finally:
-        return history
-    
 
 CSS ="""
 .contain { display: flex; flex-direction: column; }
@@ -150,112 +39,11 @@ footer { visibility: hidden; }
 """
 use_queue = True
 
-def _create_audio():
-    return gr.Audio(
-        label="🎤 Record or upload audio files...",
-        sources=["microphone", "upload"], 
-        elem_id="audio",
-        show_download_button=True,
-        editable=True,
-        interactive=True,                
-        show_label=True)
-    
-def _create_chatbot():
-    return gr.Chatbot(
-        [(None, appSettings.prompt.first_prompt)],
-        #label = "Chat",
-        line_breaks=True,
-        render_markdown=True,
-        elem_id="chatbot",
-        bubble_full_width=False,
-        show_share_button=True,
-        show_copy_button=True,
-        # FIXME this shows the file path
-        avatar_images=(None, (os.path.join(os.path.dirname(__file__), "icon.png")))        
-    )    
-    
-def _create_textbox():
-    
-    return gr.Textbox(
-        scale=4,
-        elem_id="textbox",
-        show_label=False,
-        placeholder="Enter text and press enter, or upload a text file or audio file.",
-        container=False,
-        interactive=True,
-    )
-    
-def _create_upload_button():
-    return gr.UploadButton(
-        "📁 Upload", 
-        file_types=["text", "audio"],
-        file_count="multiple",            
-        interactive=True,
-    )
+#with gr.Blocks(title=appSettings.service.name, css=CSS) as demo:
+#    tab = create_chat_tab()    
 
-def _create_topk_control():
-    return gr.Number(
-            label="Top K", 
-            value=3, 
-            minimum=1,
-            maximum=100,
-            step=1, 
-            info="Sets number of nearest neighbors to return."
-        )
-
-def _create_response_mode_dropdown():
-    response_mode_names = list(ResponseMode.__members__.keys())
-    default1 = ResponseMode.COMPACT
-    response_mode = gr.Dropdown(
-            response_mode_names, 
-            label="Response Mode", 
-            info="Sets response modes of the response builder (and synthesizer).",
-            value=default1.upper()
-        )
-    
-    return response_mode
-
-def _create_vectorstore_query_mode():
-    vector_store_query_mode_names = list(VectorStoreQueryMode.__members__.keys())        
-    default2 = str(VectorStoreQueryMode.DEFAULT).split('.')[-1].lower()
-    vector_query_mode = gr.Dropdown(
-            vector_store_query_mode_names, 
-            label="Query Mode", 
-            info="Sets the vector store query mode.",
-            value=default2.upper()
-        )
-    
-    return vector_query_mode
-
-def _create_clear_button(chatbot, txt):
-    return gr.ClearButton([txt, chatbot])
-
-with gr.Blocks(title=appSettings.service.name, css=CSS) as demo:    
-    chatbot = _create_chatbot()        
-        
-    with gr.Row():
-        txt = _create_textbox()
-        upload_btn = _create_upload_button()
-        clear_btn = _create_clear_button(chatbot, txt)
-    
-    with gr.Row():                
-        top_k_number = _create_topk_control()        
-        response_mode = _create_response_mode_dropdown()        
-        vector_query_mode = _create_vectorstore_query_mode()
-        
-    # chatbox.value1, value2 --> function add_audio() --> the results are passed back t
-    #audio_msg = audio.change(add_audio, [chatbot, audio], [chatbot, audio], queue=use_queue)
-    #audio_msg.then(bot, [chatbot], [chatbot])                 
-    #audio_msg.then(_create_audio, None, [audio], queue=use_queue)
-    
-    txt_msg = txt.submit(add_text, [chatbot, txt], [chatbot, txt], queue=use_queue)
-    txt_msg.then(bot, [chatbot, top_k_number, response_mode, vector_query_mode], [chatbot])
-    txt_msg.then(_create_textbox, None, [txt], queue=use_queue)
-    
-    file_msg = upload_btn.upload(add_files, [chatbot, upload_btn], [chatbot], queue=use_queue)
-    file_msg.then(bot, [chatbot, top_k_number, response_mode, vector_query_mode], [chatbot])
-
-    chatbot.like(print_like_dislike, None, None)
+tab = create_chat_tab()
+demo = gr.TabbedInterface([tab], ["Chat Tab"])
 
 demo.queue()
 if __name__ == "__main__":
