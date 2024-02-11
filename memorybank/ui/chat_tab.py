@@ -89,16 +89,6 @@ def add_text(history, text):
     
     return history, gr.Textbox(value="", interactive=False)
 
-def add_audio(history, audio):
-    if audio is not None:    
-        try:    
-            transcribed_msg = transcriber.transcribe(audio)
-        except Exception as e:
-            transcribed_msg = f"Error: {e}"
-        
-        history = history + [(transcribed_msg, None)]
-        
-    return history, gr.Audio(sources=["microphone"])
 
 async def bot(history, top_k: int, response_mode: ResponseMode, vector_query_mode: VectorStoreQueryMode):
     try:
@@ -147,10 +137,6 @@ def create_chat_tab():
             response_mode = _create_response_mode_dropdown()        
             vector_query_mode = _create_vectorstore_query_mode()
             
-        # chatbox.value1, value2 --> function add_audio() --> the results are passed back t
-        #audio_msg = audio.change(add_audio, [chatbot, audio], [chatbot, audio], queue=use_queue)
-        #audio_msg.then(bot, [chatbot], [chatbot])                 
-        #audio_msg.then(_create_audio, None, [audio], queue=use_queue)
         
         txt_msg = txt.submit(add_text, [chatbot, txt], [chatbot, txt], queue=use_queue)
         txt_msg.then(bot, [chatbot, top_k_number, response_mode, vector_query_mode], [chatbot])
@@ -163,17 +149,6 @@ def create_chat_tab():
 
         return tab
 
-
-
-def _create_audio():
-    return gr.Audio(
-        label="🎤 Record or upload audio files...",
-        sources=["microphone", "upload"], 
-        elem_id="audio",
-        show_download_button=True,
-        editable=True,
-        interactive=True,                
-        show_label=True)
     
 def _create_chatbot():
     return gr.Chatbot(
@@ -192,7 +167,8 @@ def _create_chatbot():
 def _create_textbox():
     
     return gr.Textbox(
-        scale=4,
+        
+        scale=4,        
         elem_id="textbox",
         show_label=False,
         placeholder="Enter text and press enter, or upload a text file or audio file.",
