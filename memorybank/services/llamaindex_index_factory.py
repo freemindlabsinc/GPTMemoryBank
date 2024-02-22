@@ -13,7 +13,7 @@ from llama_index.embeddings.azure_openai import (AzureOpenAIEmbedding)
 #from llama_index.vector_stores.elasticsearch import (ElasticsearchStore)
 
 # TODO fix dependency on legacy and ask about ES store
-from llama_index.core.vector_stores import (
+from llama_index.vector_stores.elasticsearch import (    
     ElasticsearchStore,
 )
 #from llama_index.storage.storage_context import (StorageContext)
@@ -149,8 +149,9 @@ class LlamaIndexIndexFactory(IndexFactory):
 
         # Instantiate the Elasticsearch client
         index = VectorStoreIndex.from_vector_store(
-            self.vector_store, 
-            service_context=self.service_context, 
+            vector_store = self.vector_store,             
+            # TODO look intoi this. might need more args
+            #service_context=self.service_context,             
             show_progress=True)
         
         return index

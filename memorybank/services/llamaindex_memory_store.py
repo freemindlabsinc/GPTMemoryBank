@@ -3,7 +3,9 @@ from loguru import logger
 from typing import Dict, List, Optional
 from injector import inject
 
-from llama_index import (Response, SimpleDirectoryReader)
+from llama_index.core import (Response)
+from llama_index.core.readers.file.base import SimpleDirectoryReader
+
 from llama_index.core.retrievers import (VectorIndexRetriever)
 from llama_index.core.response_synthesizers import get_response_synthesizer
 from llama_index.core.query_engine import (RetrieverQueryEngine)

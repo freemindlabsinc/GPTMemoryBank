@@ -5,6 +5,7 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 import llama_index
+from llama_index.core.settings import Settings
 from memorybank.settings.app_settings import AppSettings
 
 def _setup_cors(app: FastAPI):
@@ -45,7 +46,7 @@ def _setup_openapi(app: FastAPI):
 
 def create_app() -> FastAPI:
     # Add LlamaIndex simple observability
-    llama_index.set_global_handler("simple")
+    Settings.global_handler = "simple"
     
     # Add injector to request state    
     #async def bind_injector_to_request(request: Request) -> None:
