@@ -9,8 +9,8 @@ from fastapi import File, Form, HTTPException, Depends, Body, UploadFile, Reques
 from fastapi import APIRouter
 from typing import Optional, List
 
-from llama_index import Document
-from llama_index import SimpleDirectoryReader
+from llama_index.core.schema import Document
+from llama_index.core.readers.file.base import SimpleDirectoryReader
 
 from memorybank.abstractions.memory_store import MemoryStore
 from memorybank.models.api import (UpsertRequest, UpsertResponse)

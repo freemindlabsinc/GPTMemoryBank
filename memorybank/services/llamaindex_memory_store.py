@@ -4,11 +4,11 @@ from typing import Dict, List, Optional
 from injector import inject
 
 from llama_index import (Response, SimpleDirectoryReader)
-from llama_index.retrievers import (VectorIndexRetriever)
-from llama_index.response_synthesizers import get_response_synthesizer
-from llama_index.query_engine import (RetrieverQueryEngine)
-from llama_index.vector_stores.types import VectorStoreQueryMode
-from llama_index.response_synthesizers.type import ResponseMode
+from llama_index.core.retrievers import (VectorIndexRetriever)
+from llama_index.core.response_synthesizers import get_response_synthesizer
+from llama_index.core.query_engine import (RetrieverQueryEngine)
+from llama_index.core.vector_stores.types import VectorStoreQueryMode
+from llama_index.core.response_synthesizers.type import ResponseMode
 
 from memorybank.abstractions.memory_store import MemoryStore
 from memorybank.models.api import QueryResult

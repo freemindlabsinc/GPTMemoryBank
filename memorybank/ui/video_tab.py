@@ -1,8 +1,8 @@
 import os
 import gradio as gr
 
-from llama_index.vector_stores.types import VectorStoreQueryMode
-from llama_index.response_synthesizers.type import ResponseMode
+from llama_index.core.vector_stores.types import VectorStoreQueryMode
+from llama_index.core.response_synthesizers.type import ResponseMode
 from loguru import logger
 
 from memorybank.abstractions.memory_store import MemoryStore

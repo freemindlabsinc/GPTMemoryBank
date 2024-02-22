@@ -44,8 +44,10 @@ voice_tab = create_voice_tab()
 video_tab = create_video_tab()
 file_manager_tab = create_file_manager_tab()
 demo = gr.TabbedInterface(
-    [chat_tab, voice_tab, video_tab, file_manager_tab], 
-    ["Chat", "Voice", "Video", "File Manager"])
+    # [chat_tab, voice_tab, video_tab, file_manager_tab], 
+    [chat_tab], 
+    #["Chat", "Voice", "Video", "File Manager"])
+    ["Chat"])
 
 demo.queue()
 if __name__ == "__main__":

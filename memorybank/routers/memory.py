@@ -4,13 +4,11 @@ from loguru import logger
 from fastapi import APIRouter, HTTPException, Depends, Body, Request
 from datetime import datetime
 
-from llama_index import Response, VectorStoreIndex
-from llama_index.schema import NodeWithScore
+from llama_index.core.schema import NodeWithScore
 
 from memorybank.abstractions.memory_store import MemoryStore
 from memorybank.models.api import (QueryResponse, QueryRequest, QueryResult)
 from memorybank.models.models import (DocumentChunk, DocumentChunkMetadata, Source)
-from memorybank.abstractions.index_factory import IndexFactory
 
 router = APIRouter(
     prefix="/memory",

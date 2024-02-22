@@ -3,24 +3,37 @@ from loguru import logger
 from elasticsearch import AsyncElasticsearch
 from injector import inject
 
-from llama_index.llms import (AzureOpenAI, OpenAI)
-from llama_index.embeddings import (AzureOpenAIEmbedding, HuggingFaceEmbedding)
-from llama_index.vector_stores import (ElasticsearchStore)
-from llama_index.storage.storage_context import (StorageContext)
+from llama_index.core.settings import Settings
+from llama_index.llms.openai import OpenAI
+from llama_index.llms.azure_openai import AzureOpenAI
+from llama_index.embeddings.huggingface import (HuggingFaceEmbedding)
+from llama_index.embeddings.azure_openai import (AzureOpenAIEmbedding)
+#from llama_index.vector_stores import (ElasticsearchStore)
+#from llama_index.core.vector_stores import (ElasticsearchStore)
+#from llama_index.vector_stores.elasticsearch import (ElasticsearchStore)
 
-from llama_index import (ServiceContext, 
-                         VectorStoreIndex,
-                         set_global_handler,
-                         load_index_from_storage,
-                         load_indices_from_storage,
-                         load_graph_from_storage,
+# TODO fix dependency on legacy and ask about ES store
+from llama_index.core.vector_stores import (
+    ElasticsearchStore,
 )
+#from llama_index.storage.storage_context import (StorageContext)
+from llama_index.core.storage.storage_context import StorageContext
 
-from llama_index.callbacks import (
+from llama_index.core.indices.vector_store.base import (
+    VectorStoreIndex,
+)
+#from llama_index.core import (#ServiceContext, 
+#                         set_global_handler,
+#                         load_index_from_storage,
+#                         load_indices_from_storage,
+#                         load_graph_from_storage,
+#)
+
+# TODO fix dependency on legacy
+from llama_index.legacy.callbacks import (
     CallbackManager,
     LlamaDebugHandler
 )
-
 from memorybank.settings.app_settings import AppSettings
 from memorybank.settings.embeddings_settings import EmbeddingType
 from memorybank.abstractions.index_factory import IndexFactory
@@ -37,7 +50,12 @@ class LlamaIndexIndexFactory(IndexFactory):
         self.llm = self._create_llm()
         self.vector_store = self._create_vector_store()
         self.storage_context =self._create_storage_context
-        self.service_context = self._create_service_context() 
+        
+        Settings.llm = self.llm
+        Settings.callback_manager = self.callback_manager
+        Settings.embed_model = self.embed_model
+        
+        #self.service_context = self._create_service_context() 
         self.vector_index = self.create_vector_index()
         
     def _create_elasticsearch_client(self) -> AsyncElasticsearch:
@@ -104,18 +122,7 @@ class LlamaIndexIndexFactory(IndexFactory):
         else:
             raise Exception("No LLM API key provided")                               
         
-        return llm
-    
-    def _create_service_context(self) -> ServiceContext:        
-        logger.debug("Creating service context...")
-        
-        service_context = ServiceContext.from_defaults(
-            llm=self.llm,
-            callback_manager=self.callback_manager,             
-            embed_model=self.embed_model,            
-        )
-        
-        return service_context
+        return llm        
     
     def _create_vector_store(self) -> ElasticsearchStore:
         logger.debug("Creating vector store...")

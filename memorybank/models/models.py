@@ -2,9 +2,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 from enum import Enum
 
-# should me moved elsewhere
-from llama_index.vector_stores.types import VectorStoreQueryMode
-from llama_index.response_synthesizers.type import ResponseMode        
+from llama_index.core.response_synthesizers.type import ResponseMode        
+from llama_index.core.vector_stores.types import VectorStoreQueryMode
 
 class Source(str, Enum):
     email = "email"
