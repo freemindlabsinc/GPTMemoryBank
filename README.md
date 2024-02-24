@@ -31,6 +31,7 @@ python -m pip freeze > requirements.txt
 ngrok http http://localhost:7000
 
 ./venv/Lib/site-packages/llama_index
+pip install llama_index==0.10.12   
 
 ## Elasticsearch related
 

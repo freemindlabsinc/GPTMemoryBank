@@ -47,11 +47,10 @@ class LlamaIndexMemoryStore(MemoryStore):
                         
             #query_engine = idx.as_query_engine()            
             retriever = VectorIndexRetriever(
-                #vector_store_query_mode=query.query_mode or VectorStoreQueryMode.DEFAULT,
                 vector_store_query_mode=query.query_mode,
                 #filters=MetadataFilters(),
                 #alpha = float,                                
-                #callback_manager=idx.service_context.callback_manager,
+                callback_manager=Settings.callback_manager,
                 verbose=True,
                 index = idx,
                 similarity_top_k=query.top_k,                
@@ -78,6 +77,7 @@ class LlamaIndexMemoryStore(MemoryStore):
                 response_synthesizer=synth,
             )
             
+            logger.debug(f"Querying for '{query.text}'...")
             response = await query_engine.aquery(query.text)
                         
             logger.debug(f"Query response: {response}")
