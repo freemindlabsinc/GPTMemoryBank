@@ -2,6 +2,8 @@ from loguru import logger
 from elasticsearch import AsyncElasticsearch
 from injector import inject
 from llama_index.core.settings import Settings
+from llama_index.core.embeddings import BaseEmbedding
+from llama_index.core.callbacks import CallbackManager
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
@@ -15,22 +17,26 @@ from memorybank.settings.embeddings_settings import EmbeddingType
 from memorybank.abstractions.index_factory import IndexFactory
 
 class LlamaIndexIndexFactory(IndexFactory):
+    """
+    Configures and returns a LlamaIndex VecorStoreIndex instance.
+    """
     @inject
     def __init__(self, app_settings: AppSettings):
+        """
+        Constructor for the LlamaIndexIndexFactory class.
+        """
         self.app_settings = app_settings
-        
-        self.embed_model = self._create_embedding_model()        
-        self.vector_store = self._create_vector_store()
-        self.storage_context = self._create_storage_context
         
         Settings.llm = self._create_llm()
         Settings.callback_manager = self._create_callback_manager()
-        Settings.embed_model = self.embed_model        
+        Settings.embed_model = self._create_embedding_model()        
         
-        #self.service_context = self._create_service_context() 
+        self.vector_store = self._create_vector_store()
+        self.storage_context = self._create_storage_context()        
+        
         self.vector_index = self.create_vector_index()            
 
-    def _create_embedding_model(self):    
+    def _create_embedding_model(self) -> BaseEmbedding:            
         logger.debug("Creating embedding model...")
         
         model_name = self.app_settings.embeddings.model
@@ -53,7 +59,7 @@ class LlamaIndexIndexFactory(IndexFactory):
         
         return embed_model    
     
-    def _create_callback_manager(self):
+    def _create_callback_manager(self) -> CallbackManager:
         logger.debug("Creating callback manager...")
         
         llama_debug = LlamaDebugHandler(print_trace_on_end=True)
@@ -111,9 +117,11 @@ class LlamaIndexIndexFactory(IndexFactory):
     def _create_storage_context(self) -> StorageContext:
         logger.debug("Creating storage context...")
         
-        persist_directory = "./.persistDir"
-        storage_context = StorageContext.from_defaults(            
-            persist_dir=persist_directory,
+        storage_context = StorageContext.from_defaults(
+            docstore=None,
+            index_store=None,
+            image_store=None,
+            graph_store=None,            
             vector_store=self.vector_store)
         
         return storage_context

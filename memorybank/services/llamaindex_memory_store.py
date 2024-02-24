@@ -47,34 +47,42 @@ class LlamaIndexMemoryStore(MemoryStore):
                         
             #query_engine = idx.as_query_engine()            
             retriever = VectorIndexRetriever(
-                vector_store_query_mode=query.query_mode,
+                index= idx,
+                similarity_top_k=query.top_k,
+                vector_store_query_mode=query.query_mode,                                
                 #filters=MetadataFilters(),
                 #alpha = float,                                
+                #node_ids=None,
+                #doc_ids=None,
+                #sparse_top_k=
                 callback_manager=Settings.callback_manager,
-                verbose=True,
-                index = idx,
-                similarity_top_k=query.top_k,                
+                #object_map=
+                verbose=True,                
             )
             
+            # TODO the synthesizer provides a lot of options that are needed in the UI
             synth = get_response_synthesizer(
-                #response_mode=query.response_mode or ResponseMode.COMPACT_ACCUMULATE,
-                response_mode=query.response_mode,
-                callback_manager=Settings.callback_manager,
-                service_context=idx.service_context,
+                llm=None,
+                prompt_helper=None, # manages the chat window
                 #text_qa_template=
                 #refine_template=
                 #summary_template=
-                #simple_template=
+                #simple_template=                
+                response_mode=query.response_mode,
+                callback_manager=Settings.callback_manager,
+                service_context=idx.service_context,                                
                 #use_async=
                 #streaming=
                 #structured_answer_filtering=
                 #output_cls=
+                #program_factory=
             )
             
             query_engine = RetrieverQueryEngine(
                 callback_manager=Settings.callback_manager,
                 retriever=retriever,
                 response_synthesizer=synth,
+                node_postprocessors=None,                                
             )
             
             logger.debug(f"Querying for '{query.text}'...")
