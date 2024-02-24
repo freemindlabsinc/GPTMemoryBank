@@ -52,9 +52,9 @@ async def query(
 ):
     try:        
         
-        results = await memory_store.query(request.queries)
+        result = await memory_store.query(request.query)
                   
-        response = QueryResponse(results=results)
+        response = QueryResponse(result=result)
         
         return response
     
@@ -63,7 +63,7 @@ async def query(
         raise HTTPException(status_code=500, detail="Internal Service Error")
     
     finally:
-        logger.info(f"Query: {request.queries}")
+        logger.info(f"Query: {request.query}")
         
 # ------------------------ Enpoint ------------------------
 @router.post(
@@ -85,7 +85,7 @@ async def retrieve(
         raise HTTPException(status_code=500, detail="Internal Service Error")
     
     finally:
-        logger.info(f"Summarize: {request.queries}") 
+        logger.info(f"Summarize: {request.query}") 
 
 
 @router.post(
@@ -106,7 +106,7 @@ async def summarize(
         raise HTTPException(status_code=500, detail="Internal Service Error")
     
     finally:
-        logger.info(f"Summarize: {request.queries}") 
+        logger.info(f"Summarize: {request.query}") 
     
 # ------------------------ Future enpoints ------------------------
  # /summarize

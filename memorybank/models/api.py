@@ -17,11 +17,11 @@ class UpsertResponse(BaseModel):
 
 
 class QueryRequest(BaseModel):    
-    queries: List[Query]
+    query: Query
 
 
 class QueryResponse(BaseModel):
-    results: List[QueryResult]
+    result: QueryResult
 
 
 class DeleteRequest(BaseModel):
