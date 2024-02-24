@@ -30,7 +30,7 @@ from llama_index.core.indices.vector_store.base import (
 #)
 
 # TODO fix dependency on legacy
-from llama_index.legacy.callbacks import (
+from llama_index.core.callbacks import (
     CallbackManager,
     LlamaDebugHandler
 )
@@ -44,16 +44,13 @@ class LlamaIndexIndexFactory(IndexFactory):
         self.app_settings = app_settings
         
         self.es_client = self._create_elasticsearch_client()
-        self.embed_model = self._create_embedding_model()
-        self.callback_mgr = self._create_callback_manager()
-        self.callback_manager = self._create_callback_manager()
-        self.llm = self._create_llm()
+        self.embed_model = self._create_embedding_model()        
         self.vector_store = self._create_vector_store()
-        self.storage_context =self._create_storage_context
+        self.storage_context = self._create_storage_context
         
-        Settings.llm = self.llm
-        Settings.callback_manager = self.callback_manager
-        Settings.embed_model = self.embed_model
+        Settings.llm = self._create_llm()
+        Settings.callback_manager = self._create_callback_manager()
+        Settings.embed_model = self.embed_model        
         
         #self.service_context = self._create_service_context() 
         self.vector_index = self.create_vector_index()
@@ -99,7 +96,7 @@ class LlamaIndexIndexFactory(IndexFactory):
         logger.debug("Creating callback manager...")
         
         llama_debug = LlamaDebugHandler(print_trace_on_end=True)
-        callback_manager = CallbackManager([llama_debug])
+        return CallbackManager([llama_debug])
         
     def _create_llm(self):
         logger.debug("Creating LLM...")

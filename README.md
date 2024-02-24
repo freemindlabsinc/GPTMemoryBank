@@ -30,6 +30,8 @@ python -m pip freeze > requirements.txt
 
 ngrok http http://localhost:7000
 
+./venv/Lib/site-packages/llama_index
+
 ## Elasticsearch related
 
 $ openssl x509 -fingerprint -sha256 -noout -in /tmp/ca.crt | awk -F"=" {' print $2 '} | sed s/://g

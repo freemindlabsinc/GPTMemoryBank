@@ -3,7 +3,7 @@ from loguru import logger
 from typing import Dict, List, Optional
 from injector import inject
 
-from llama_index.core import (Response)
+from llama_index.core import (Response, Settings)
 from llama_index.core.readers.file.base import SimpleDirectoryReader
 
 from llama_index.core.retrievers import (VectorIndexRetriever)
@@ -43,7 +43,7 @@ class LlamaIndexMemoryStore(MemoryStore):
         idx = await self.index_factory.get_vector_index()
         
         try:            
-            logger.debug(f"Querying for '{query}'. vector_store_query_mode={query.query_mode}, response_mode={query.response_mode}...")
+            #logger.debug(f"Querying for '{query}'. vector_store_query_mode={query.query_mode}, response_mode={query.response_mode}...")
                         
             #query_engine = idx.as_query_engine()            
             retriever = VectorIndexRetriever(
@@ -51,7 +51,7 @@ class LlamaIndexMemoryStore(MemoryStore):
                 vector_store_query_mode=query.query_mode,
                 #filters=MetadataFilters(),
                 #alpha = float,                                
-                callback_manager=idx.service_context.callback_manager,
+                #callback_manager=idx.service_context.callback_manager,
                 verbose=True,
                 index = idx,
                 similarity_top_k=query.top_k,                
@@ -60,7 +60,7 @@ class LlamaIndexMemoryStore(MemoryStore):
             synth = get_response_synthesizer(
                 #response_mode=query.response_mode or ResponseMode.COMPACT_ACCUMULATE,
                 response_mode=query.response_mode,
-                callback_manager=idx.service_context.callback_manager,
+                callback_manager=Settings.callback_manager,
                 service_context=idx.service_context,
                 #text_qa_template=
                 #refine_template=
@@ -73,7 +73,7 @@ class LlamaIndexMemoryStore(MemoryStore):
             )
             
             query_engine = RetrieverQueryEngine(
-                callback_manager=idx.service_context.callback_manager,
+                callback_manager=Settings.callback_manager,
                 retriever=retriever,
                 response_synthesizer=synth,
             )

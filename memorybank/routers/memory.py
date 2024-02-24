@@ -51,6 +51,7 @@ async def query(
     memory_store: MemoryStore = Injected(MemoryStore)
 ):
     try:        
+        
         results = await memory_store.query(request.queries)
                   
         response = QueryResponse(results=results)
