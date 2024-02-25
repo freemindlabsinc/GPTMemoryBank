@@ -55,6 +55,7 @@ class LlamaIndexMemoryStore(MemoryStore):
                 #node_ids=None,
                 #doc_ids=None,
                 #sparse_top_k=
+                # FIX hack to get the callback manager
                 callback_manager=Settings.callback_manager,
                 #object_map=
                 verbose=True,                

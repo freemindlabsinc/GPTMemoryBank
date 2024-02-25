@@ -6,5 +6,3 @@ class IndexFactory(ABC):
     @abstractmethod
     async def get_vector_index(self) -> VectorStoreIndex:
         raise NotImplementedError
-    
-

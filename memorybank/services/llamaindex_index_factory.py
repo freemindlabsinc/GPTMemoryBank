@@ -28,9 +28,12 @@ class LlamaIndexIndexFactory(IndexFactory):
         """
         Constructor for the LlamaIndexIndexFactory class.
         """
-        Settings.embed_model = self._create_embedding_model(app_settings)                
-        Settings.llm = self._create_llm(app_settings)
-        Settings.callback_manager = self._create_callback_manager(app_settings)
+        self.callback_manager = self._create_callback_manager(app_settings)
+        # FIX ME: This is a hack to get the callback manager to other classes
+        Settings.callback_manager = self.callback_manager
+        
+        self.embed_model = self._create_embedding_model(app_settings)                
+        self.llm = self._create_llm(app_settings)        
         
         self.vector_store = self._create_vector_store(app_settings)
         self.storage_context = self._create_storage_context(app_settings)        
@@ -59,7 +62,7 @@ class LlamaIndexIndexFactory(IndexFactory):
         
         if model_type == EmbeddingType.huggingface:    
             embed_model = HuggingFaceEmbedding(model_name=model_name, 
-                                               callback_manager=Settings.callback_manager)
+                                               callback_manager=self.callback_manager)
             
         elif model_type == EmbeddingType.azureai:
             embed_model = AzureOpenAIEmbedding(
@@ -79,6 +82,9 @@ class LlamaIndexIndexFactory(IndexFactory):
         return embed_model    
     
     def _create_callback_manager(self, app_settings: AppSettings) -> CallbackManager:
+        # Add LlamaIndex simple observability
+        Settings.global_handler = "simple"
+        
         logger.debug("Creating callback manager...")
         
         llama_debug = LlamaDebugHandler(print_trace_on_end=True)
@@ -168,6 +174,10 @@ class LlamaIndexIndexFactory(IndexFactory):
         logger.debug(f"Vector index created: {index}")
         
         return index
+
+    def get_callback_manager(self) -> CallbackManager:
+        logger.debug("Getting callback manager...")
+        return self.callback_manager
 
     async def get_vector_index(self) -> VectorStoreIndex:                
         logger.debug("Getting vector index...")
