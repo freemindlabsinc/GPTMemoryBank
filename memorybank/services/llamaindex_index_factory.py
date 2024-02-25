@@ -4,8 +4,13 @@ from injector import inject
 from llama_index.core.settings import Settings
 from llama_index.core.embeddings import BaseEmbedding
 from llama_index.core.callbacks import CallbackManager
+from llama_index.core.llms import LLM
+from llama_index.llms.ollama import Ollama
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.azure_openai import AzureOpenAI
+#from llama_index.llms.openai import OpenAI
+#from llama_index.llms.azure_openai import AzureOpenAI
+from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from llama_index.vector_stores.elasticsearch import ElasticsearchStore
@@ -34,13 +39,23 @@ class LlamaIndexIndexFactory(IndexFactory):
         self.vector_store = self._create_vector_store()
         self.storage_context = self._create_storage_context()        
         
-        self.vector_index = self.create_vector_index()            
-
+        self.vector_index = self._create_vector_index()            
+    
     def _create_embedding_model(self) -> BaseEmbedding:            
         logger.debug("Creating embedding model...")
         
+        #model_to_use = "mistral"    
+        #embed_model = OllamaEmbedding(
+        #    model_name=self.model_to_use,
+        #    base_url="http://localhost:11434",
+        #    #embed_batch_size=1,
+        #    callback_manager=Settings.callback_manager)
+                                      
+        #return embed_model
+        
         model_name = self.app_settings.embeddings.model
         model_type = self.app_settings.embeddings.type
+            
         
         if model_type == EmbeddingType.huggingface:    
             embed_model = HuggingFaceEmbedding(model_name=model_name)
@@ -65,8 +80,9 @@ class LlamaIndexIndexFactory(IndexFactory):
         llama_debug = LlamaDebugHandler(print_trace_on_end=True)
         return CallbackManager([llama_debug])
         
-    def _create_llm(self):
+    def _create_llm(self) -> LLM:
         logger.debug("Creating LLM...")
+        #llm = Ollama(model="llama2", request_timeout=60.0, base_url="http://localhost:11434")
         
         if self.app_settings.openai.api_key is not None:
             ai_config = self.app_settings.openai
@@ -86,7 +102,7 @@ class LlamaIndexIndexFactory(IndexFactory):
         else:
             raise Exception("No LLM API key provided")                               
         
-        return llm        
+        return llm            
     
     def _create_elasticsearch_client(self) -> AsyncElasticsearch:
         logger.debug("Creating Elasticsearch client...")
@@ -126,7 +142,7 @@ class LlamaIndexIndexFactory(IndexFactory):
         
         return storage_context
 
-    def create_vector_index(self) -> VectorStoreIndex:                
+    def _create_vector_index(self) -> VectorStoreIndex:                
         logger.debug("Creating vector index...")
 
         # Instantiate the Elasticsearch client
