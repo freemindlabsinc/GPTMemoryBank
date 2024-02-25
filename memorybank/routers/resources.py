@@ -145,7 +145,7 @@ def _convert_uploaded_files_to_chunks(files: List[UploadFile]) -> List[Document]
         # Parses the files in the temp directory and returns a List[Document] from the files
         chunks = SimpleDirectoryReader(
             input_files=file_names,
-            filename_as_id=True,            
+            filename_as_id=True,
             exclude_hidden=False).load_data(
                 show_progress=True,
                 num_workers=1,)
