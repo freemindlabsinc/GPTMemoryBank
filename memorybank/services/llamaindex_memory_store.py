@@ -56,21 +56,21 @@ class LlamaIndexMemoryStore(MemoryStore):
                 #doc_ids=None,
                 #sparse_top_k=
                 # FIX hack to get the callback manager
-                callback_manager=Settings.callback_manager,
+                callback_manager=self.index_factory.get_callback_manager(),
                 #object_map=
                 verbose=True,                
             )
             
             # TODO the synthesizer provides a lot of options that are needed in the UI
             synth = get_response_synthesizer(
-                llm=None,
+                llm=self.index_factory.get_llm(),
                 prompt_helper=None, # manages the chat window
                 #text_qa_template=
                 #refine_template=
                 #summary_template=
                 #simple_template=                
                 response_mode=query.response_mode,
-                callback_manager=Settings.callback_manager,
+                callback_manager=self.index_factory.get_callback_manager(),
                 service_context=idx.service_context,                                
                 #use_async=
                 #streaming=
@@ -80,7 +80,7 @@ class LlamaIndexMemoryStore(MemoryStore):
             )
             
             query_engine = RetrieverQueryEngine(
-                callback_manager=Settings.callback_manager,
+                callback_manager=self.index_factory.get_callback_manager(),
                 retriever=retriever,
                 response_synthesizer=synth,
                 node_postprocessors=None,                                

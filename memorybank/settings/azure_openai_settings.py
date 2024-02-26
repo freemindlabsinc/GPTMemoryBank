@@ -9,6 +9,6 @@ class AzureOpenAISettings(OpenAISettings):
         "2023-07-01-preview",
         description="API version to use. Example: '2023-07-01-preview'.")
 
-    deployment_id: str = Field(
+    deployment_name: str = Field(
         None,
         description="Model deployment ID.")
