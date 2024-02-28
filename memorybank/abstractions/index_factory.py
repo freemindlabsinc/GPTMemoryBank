@@ -12,10 +12,16 @@ from abc import ABC, abstractmethod
 class IndexFactory(ABC):       
     @abstractmethod
     def get_vector_index(self) -> VectorStoreIndex:                
-        pass 
+        raise NotImplementedError
     
     @abstractmethod
     def get_chat_engine(self) -> BaseChatEngine:
+        raise NotImplementedError
+        
+    @abstractmethod
+    def get_retriever(self,
+                      top_k: float, 
+                      vector_store_query_mode: VectorStoreQueryMode) -> BaseRetriever:
         raise NotImplementedError
     
     @abstractmethod
@@ -23,8 +29,4 @@ class IndexFactory(ABC):
                          top_k: float, 
                          vector_store_query_mode: VectorStoreQueryMode,
                          response_mode: ResponseMode) -> BaseQueryEngine:
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_retriever(self) -> BaseRetriever:
         raise NotImplementedError

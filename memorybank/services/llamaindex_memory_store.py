@@ -119,7 +119,8 @@ class LlamaIndexMemoryStore(MemoryStore):
         filter: Optional[DocumentMetadataFilter] = None,
         delete_all: Optional[bool] = None,
     ) -> bool:
-        
+        raise NotImplementedError("Delete not implemented yet.")
+    
         idx = await self.index_factory.get_vector_index()
         
         return True
