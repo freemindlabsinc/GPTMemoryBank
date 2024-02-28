@@ -4,6 +4,18 @@ from injector import inject
 from llama_index.core.settings import Settings
 from llama_index.core.embeddings import BaseEmbedding
 from llama_index.core.callbacks import CallbackManager
+from llama_index.core.chat_engine.types import BaseChatEngine
+from llama_index.core.query_engine import BaseQueryEngine
+from llama_index.core.retrievers import BaseRetriever
+from llama_index.core.chat_engine.types import ChatMode
+from llama_index.core.chat_engine.types import BaseChatEngine
+from llama_index.core.query_engine import BaseQueryEngine
+from llama_index.core.retrievers import BaseRetriever
+from llama_index.core.retrievers import (VectorIndexRetriever)
+from llama_index.core.response_synthesizers import (get_response_synthesizer, BaseSynthesizer)
+from llama_index.core.query_engine import (RetrieverQueryEngine)
+from llama_index.core.vector_stores.types import VectorStoreQueryMode
+from llama_index.core.response_synthesizers.type import ResponseMode
 from llama_index.core.llms import LLM
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.openai import OpenAI
@@ -19,6 +31,8 @@ from llama_index.core.callbacks import (CallbackManager, LlamaDebugHandler)
 from memorybank.settings.app_settings import AppSettings
 from memorybank.settings.service_settings import EmbeddingType, LLMType
 from memorybank.abstractions.index_factory import IndexFactory
+from llama_index.core.response_synthesizers.type import ResponseMode        
+from llama_index.core.vector_stores.types import VectorStoreQueryMode
 
 class LlamaIndexIndexFactory(IndexFactory):
     """
@@ -33,9 +47,8 @@ class LlamaIndexIndexFactory(IndexFactory):
         
         self.embed_model = self._create_embedding_model(app_settings)                
         self.llm = self._create_llm(app_settings)
-        self.storage_context = self._create_storage_context(app_settings)
-        
-        self.vector_index = self._create_vector_index(app_settings, self.storage_context, self.embed_model) 
+        self.storage_context = self._create_storage_context(app_settings)        
+        self.vector_index = self._create_vector_index(app_settings)#, self.storage_context, self.embed_model) 
     
     def _create_callback_manager(self, app_settings: AppSettings) -> CallbackManager:
         # Add LlamaIndex simple observability
@@ -184,13 +197,13 @@ class LlamaIndexIndexFactory(IndexFactory):
         
         return storage_context
 
-    def _create_vector_index(self, app_settings: AppSettings, storage_context: StorageContext, embed_model: BaseEmbedding) -> VectorStoreIndex:                
+    def _create_vector_index(self, app_settings: AppSettings) -> VectorStoreIndex:                
         logger.debug("Creating vector index...")
 
         # Instantiate the Elasticsearch client
         index = VectorStoreIndex.from_vector_store(            
-            vector_store = storage_context.vector_store,    
-            embed_model= embed_model,                     
+            vector_store = self.storage_context.vector_store,    
+            embed_model= self.embed_model,                     
             # TODO look intoi this. might need more args
             #service_context=self.service_context,             
             show_progress=True)
@@ -198,20 +211,81 @@ class LlamaIndexIndexFactory(IndexFactory):
         logger.debug(f"Vector index created: {index}")
         
         return index
-
-    def get_callback_manager(self) -> CallbackManager:
-        logger.debug("Getting callback manager...")
-        return self.callback_manager
-
-    async def get_vector_index(self) -> VectorStoreIndex:                
-        logger.debug("Getting vector index...")
-
-        # Instantiate the Elasticsearch client
+    
+    def _create_synthesizer(self, response_mode: ResponseMode) -> BaseSynthesizer:
+        synth = get_response_synthesizer(
+                llm=self.llm,
+                #prompt_helper=None, # manages the chat window
+                #text_qa_template=
+                #refine_template=
+                #summary_template=
+                #simple_template=                
+                response_mode=response_mode,
+                callback_manager=self.callback_manager
+                #service_context=idx.service_context,                                
+                #use_async=
+                #streaming=
+                #structured_answer_filtering=
+                #output_cls=
+                #program_factory=
+            )
+        
+        return synth
+    
+    def _create_retriever(self, top_k: float, vector_store_query_mode: VectorStoreQueryMode) -> BaseRetriever:
+        retriever = VectorIndexRetriever(
+                index= self.vector_index,
+                similarity_top_k=top_k,
+                vector_store_query_mode=vector_store_query_mode,
+                #filters=MetadataFilters(),
+                #alpha = float,                                
+                #node_ids=None,
+                #doc_ids=None,
+                #sparse_top_k=
+                # FIX hack to get the callback manager
+                callback_manager=self.callback_manager,
+                #object_map=
+                verbose=True,                
+            )
+        return retriever #self.vector_index.as_retriever()
+    
+    # IndexFactory implementations
+    
+    def get_vector_index(self) -> VectorStoreIndex:                
         return self.vector_index
+        
+    def get_chat_engine(self) -> BaseChatEngine:           
+        return self.vector_index.as_chat_engine(
+            chat_mode = ChatMode.simple,
+            llm = self.llm,            
+        )
     
-    def get_llm(self) -> LLM:
-        logger.debug("Getting LLM...")
-        return self.llm
-    
-    def get_embed_model(self) -> BaseEmbedding:
-        return self.embed_model
+    def get_retriever(self, 
+                      top_k: float, 
+                      vector_store_query_mode: VectorStoreQueryMode) -> BaseRetriever:
+        
+        return self._create_retriever(
+            top_k=top_k,
+            vector_store_query_mode=vector_store_query_mode
+        )
+        
+    def get_query_engine(self,                          
+                         top_k: float, 
+                         vector_store_query_mode: VectorStoreQueryMode,
+                         response_mode: ResponseMode
+                        ) -> BaseQueryEngine:
+        
+        retriever = self._create_retriever(
+            top_k, 
+            vector_store_query_mode)
+            
+        synth = self._create_synthesizer(response_mode)
+                    
+        query_engine = RetrieverQueryEngine(
+            callback_manager=self.callback_manager,
+            retriever=retriever,
+            response_synthesizer=synth,
+            node_postprocessors=None,            
+        )
+            
+        return query_engine
