@@ -30,11 +30,11 @@ from llama_index.core.indices.vector_store.base import VectorStoreIndex
 from llama_index.core.callbacks import (CallbackManager, LlamaDebugHandler)
 from memorybank.settings.app_settings import AppSettings
 from memorybank.settings.service_settings import EmbeddingType, LLMType
-from memorybank.abstractions.index_factory import IndexFactory
+from memorybank.abstractions.rag_factory import RAGFactory
 from llama_index.core.response_synthesizers.type import ResponseMode        
 from llama_index.core.vector_stores.types import VectorStoreQueryMode
 
-class LlamaIndexIndexFactory(IndexFactory):
+class LlamaIndexRAGFactory(RAGFactory):
     """
     Configures and returns a LlamaIndex VecorStoreIndex instance.
     """
@@ -233,6 +233,8 @@ class LlamaIndexIndexFactory(IndexFactory):
         return synth
     
     def _create_retriever(self, top_k: float, vector_store_query_mode: VectorStoreQueryMode) -> BaseRetriever:
+        #return self.vector_index.as_retriever()
+    
         retriever = VectorIndexRetriever(
                 index= self.vector_index,
                 similarity_top_k=top_k,
@@ -241,15 +243,14 @@ class LlamaIndexIndexFactory(IndexFactory):
                 #alpha = float,                                
                 #node_ids=None,
                 #doc_ids=None,
-                #sparse_top_k=
-                # FIX hack to get the callback manager
+                #sparse_top_k=                
                 callback_manager=self.callback_manager,
                 #object_map=
                 verbose=True,                
             )
-        return retriever #self.vector_index.as_retriever()
+        return retriever
     
-    # IndexFactory implementations
+# IndexFactory implementations
     
     def get_vector_index(self) -> VectorStoreIndex:                
         return self.vector_index

@@ -19,13 +19,13 @@ from memorybank.abstractions.memory_store import MemoryStore
 from memorybank.models.api import QueryResult
 from memorybank.models.models import Document, DocumentMetadataFilter, Query
 from memorybank.settings.app_settings import AppSettings
-from memorybank.abstractions.index_factory import IndexFactory
+from memorybank.abstractions.rag_factory import RAGFactory
 
 class LlamaIndexMemoryStore(MemoryStore):
     @inject
-    def __init__(self, app_settings: AppSettings, index_factory: IndexFactory):
+    def __init__(self, app_settings: AppSettings, rag_factory: RAGFactory):
         self.app_settings = app_settings
-        self.index_factory = index_factory
+        self.rag_factory = rag_factory
         pass
 
     def _get_formatted_sources(self, response: Response, length: int = 100) -> str:
@@ -46,7 +46,7 @@ class LlamaIndexMemoryStore(MemoryStore):
         try:            
             #logger.debug(f"Querying for '{query}'. vector_store_query_mode={query.query_mode}, response_mode={query.response_mode}...")
             
-            query_engine = self.index_factory.get_query_engine(
+            query_engine = self.rag_factory.get_query_engine(
                 top_k=query.top_k,
                 vector_store_query_mode=query.query_mode,
                 response_mode=query.response_mode                
@@ -94,7 +94,7 @@ class LlamaIndexMemoryStore(MemoryStore):
         """        
         logger.debug(f"Upserting {len(documents)} documents...")
         try:
-            idx = self.index_factory.get_vector_index()
+            idx = self.rag_factory.get_vector_index()
             
             # refresh_ref_docs calls insert which then runs the conversion pipeline            
             res = idx.refresh_ref_docs(
@@ -121,7 +121,7 @@ class LlamaIndexMemoryStore(MemoryStore):
     ) -> bool:
         raise NotImplementedError("Delete not implemented yet.")
     
-        idx = await self.index_factory.get_vector_index()
+        idx = await self.rag_factory.get_vector_index()
         
         return True
     

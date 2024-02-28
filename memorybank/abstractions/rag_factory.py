@@ -9,7 +9,7 @@ from llama_index.core.retrievers import BaseRetriever
 
 from abc import ABC, abstractmethod
 
-class IndexFactory(ABC):       
+class RAGFactory(ABC):       
     @abstractmethod
     def get_vector_index(self) -> VectorStoreIndex:                
         raise NotImplementedError
