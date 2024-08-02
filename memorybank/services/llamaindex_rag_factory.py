@@ -48,7 +48,7 @@ class LlamaIndexRAGFactory(RAGFactory):
         self.embed_model = self._create_embedding_model(app_settings)                
         self.llm = self._create_llm(app_settings)
         self.storage_context = self._create_storage_context(app_settings)        
-        self.vector_index = self._create_vector_index(app_settings)#, self.storage_context, self.embed_model) 
+        self.vector_index = self._create_vector_index(app_settings)
     
     def _create_callback_manager(self, app_settings: AppSettings) -> CallbackManager:
         # Add LlamaIndex simple observability
@@ -192,7 +192,7 @@ class LlamaIndexRAGFactory(RAGFactory):
             image_store=None,
             graph_store=None,            
             vector_store=es_vector_store)
-        
+                
         logger.debug(f"Storage context created: {storage_context}")
         
         return storage_context
@@ -200,13 +200,16 @@ class LlamaIndexRAGFactory(RAGFactory):
     def _create_vector_index(self, app_settings: AppSettings) -> VectorStoreIndex:                
         logger.debug("Creating vector index...")
 
-        # Instantiate the Elasticsearch client
+        # Instantiate the Elasticsearch client        
+        #Settings.transformations 
+        #Settings.chunk_size        
+                
         index = VectorStoreIndex.from_vector_store(            
             vector_store = self.storage_context.vector_store,    
-            embed_model= self.embed_model,                     
-            # TODO look intoi this. might need more args
+            embed_model= self.embed_model,                                 
+            # TODO look into this. might need more args
             #service_context=self.service_context,             
-            show_progress=True)
+            show_progress=True)        
         
         logger.debug(f"Vector index created: {index}")
         

@@ -43,9 +43,8 @@ class LlamaIndexMemoryStore(MemoryStore):
         return "\n\n".join(texts)
 
     async def query(self, query: Query) -> QueryResult:        
-        try:            
-            #logger.debug(f"Querying for '{query}'. vector_store_query_mode={query.query_mode}, response_mode={query.response_mode}...")
-            
+        logger.debug(f"Querying '{query}'.")
+        try:                                    
             query_engine = self.rag_factory.get_query_engine(
                 top_k=query.top_k,
                 vector_store_query_mode=query.query_mode,

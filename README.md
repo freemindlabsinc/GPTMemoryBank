@@ -9,6 +9,14 @@ Work in progress
 python -m venv venv
 ```
 
+```
+# venv\Scripts\python.exe -m pip install --upgrade pip
+
+WARNING: There was an error checking the latest version of pip.
+    rm -r $env:LOCALAPPDATA\pip\cache\selfcheck\
+```
+
+
 2. Activate the virtual environment
 ```bash
 PS: .\venv\Scripts\activate
