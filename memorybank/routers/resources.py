@@ -4,7 +4,7 @@ from pathlib import Path
 import shutil
 from fastapi_injector import Injected
 from loguru import logger
-from typing import Optional
+from typing import BinaryIO, Optional
 from fastapi import File, Form, HTTPException, Depends, Body, UploadFile, Request
 from fastapi import APIRouter
 from typing import Optional, List
@@ -112,18 +112,25 @@ def generate_id(doc : Document, prefix: str, generator: str):
     
     return doc.id_
 
-def store_bytes_as_temp_file(byte_data):
+def store_bytes_as_temp_file(file: UploadFile, directory: str) -> str:
     # Create a temporary file and write the byte data to it
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        temp_file.write(byte_data)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    
+    # get the file name only from file.name
+    file_name = Path(file.filename).name
+    # save the file in directory+file_name
+    file_location = os.path.join(directory, file_name)
+    with open(file_location, "wb") as temp_file:
+        temp_file.write(file.file.read())
     
     # Return the name of the temporary file
-    return temp_file.name
+    return file_location
     
 def store_uploaded_files(files: List[UploadFile]) -> List[str]:
     file_names = []
     for file in files:
-        file_location = store_bytes_as_temp_file(file.file.read())
+        file_location = store_bytes_as_temp_file(file, "./.uploads")
         file_names.append(file_location)
         
         logger.info(f"Generated temporary file: {file.filename} at {file_location}")
@@ -138,7 +145,7 @@ def _convert_uploaded_files_to_chunks(files: List[UploadFile]) -> List[Document]
         # Parses the files in the temp directory and returns a List[Document] from the files
         chunks = SimpleDirectoryReader(
             input_files=file_names,
-            filename_as_id=True,            
+            filename_as_id=True,
             exclude_hidden=False).load_data(
                 show_progress=True,
                 num_workers=1,)

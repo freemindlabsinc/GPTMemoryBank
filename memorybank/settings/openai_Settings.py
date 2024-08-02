@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -10,9 +11,9 @@ class OpenAISettings(BaseSettings):
         "https://api.openai.com/v1",
         description="Base URL of OpenAI API. Example: 'https://api.openai.com/v1'.",
     )
-    api_key: str = Field(
+    api_key: Optional[str] = Field(
         None,
-        description="API key of OpenAI API. Example: 'sk-1234567890'.",
+        description="API key of OpenAI API. Example: 'sk-1234567890...'.",
     )
     model: str = Field(
         "gpt-3.5-turbo",

@@ -44,10 +44,12 @@ voice_tab = create_voice_tab()
 video_tab = create_video_tab()
 file_manager_tab = create_file_manager_tab()
 demo = gr.TabbedInterface(
+    title="RAG: Q&A on your documents",
     # [chat_tab, voice_tab, video_tab, file_manager_tab], 
-    [chat_tab], 
+    interface_list = [chat_tab], 
     #["Chat", "Voice", "Video", "File Manager"])
-    ["Chat"])
+    tab_names= ["Chat"],         
+    css="footer {visibility: hidden}",)
 
 demo.queue()
 if __name__ == "__main__":

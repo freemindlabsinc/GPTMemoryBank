@@ -5,6 +5,9 @@ from injector import inject
 
 from llama_index.core import (Response, Settings)
 from llama_index.core.readers.file.base import SimpleDirectoryReader
+from llama_index.core.chat_engine.types import BaseChatEngine
+from llama_index.core.query_engine import BaseQueryEngine
+from llama_index.core.retrievers import BaseRetriever
 
 from llama_index.core.retrievers import (VectorIndexRetriever)
 from llama_index.core.response_synthesizers import get_response_synthesizer
@@ -16,13 +19,13 @@ from memorybank.abstractions.memory_store import MemoryStore
 from memorybank.models.api import QueryResult
 from memorybank.models.models import Document, DocumentMetadataFilter, Query
 from memorybank.settings.app_settings import AppSettings
-from memorybank.abstractions.index_factory import IndexFactory
+from memorybank.abstractions.rag_factory import RAGFactory
 
 class LlamaIndexMemoryStore(MemoryStore):
     @inject
-    def __init__(self, app_settings: AppSettings, index_factory: IndexFactory):
+    def __init__(self, app_settings: AppSettings, rag_factory: RAGFactory):
         self.app_settings = app_settings
-        self.index_factory = index_factory
+        self.rag_factory = rag_factory
         pass
 
     def _get_formatted_sources(self, response: Response, length: int = 100) -> str:
@@ -40,44 +43,13 @@ class LlamaIndexMemoryStore(MemoryStore):
         return "\n\n".join(texts)
 
     async def query(self, query: Query) -> QueryResult:        
-        idx = await self.index_factory.get_vector_index()
-        
-        try:            
-            #logger.debug(f"Querying for '{query}'. vector_store_query_mode={query.query_mode}, response_mode={query.response_mode}...")
-                        
-            #query_engine = idx.as_query_engine()            
-            retriever = VectorIndexRetriever(
-                #vector_store_query_mode=query.query_mode or VectorStoreQueryMode.DEFAULT,
+        logger.debug(f"Querying '{query}'.")
+        try:                                    
+            query_engine = self.rag_factory.get_query_engine(
+                top_k=query.top_k,
                 vector_store_query_mode=query.query_mode,
-                #filters=MetadataFilters(),
-                #alpha = float,                                
-                #callback_manager=idx.service_context.callback_manager,
-                verbose=True,
-                index = idx,
-                similarity_top_k=query.top_k,                
+                response_mode=query.response_mode                
             )
-            
-            synth = get_response_synthesizer(
-                #response_mode=query.response_mode or ResponseMode.COMPACT_ACCUMULATE,
-                response_mode=query.response_mode,
-                callback_manager=Settings.callback_manager,
-                service_context=idx.service_context,
-                #text_qa_template=
-                #refine_template=
-                #summary_template=
-                #simple_template=
-                #use_async=
-                #streaming=
-                #structured_answer_filtering=
-                #output_cls=
-            )
-            
-            query_engine = RetrieverQueryEngine(
-                callback_manager=Settings.callback_manager,
-                retriever=retriever,
-                response_synthesizer=synth,
-            )
-            
             response = await query_engine.aquery(query.text)
                         
             logger.debug(f"Query response: {response}")
@@ -121,7 +93,7 @@ class LlamaIndexMemoryStore(MemoryStore):
         """        
         logger.debug(f"Upserting {len(documents)} documents...")
         try:
-            idx = await self.index_factory.get_vector_index()
+            idx = self.rag_factory.get_vector_index()
             
             # refresh_ref_docs calls insert which then runs the conversion pipeline            
             res = idx.refresh_ref_docs(
@@ -146,8 +118,9 @@ class LlamaIndexMemoryStore(MemoryStore):
         filter: Optional[DocumentMetadataFilter] = None,
         delete_all: Optional[bool] = None,
     ) -> bool:
-        
-        idx = await self.index_factory.get_vector_index()
+        raise NotImplementedError("Delete not implemented yet.")
+    
+        idx = await self.rag_factory.get_vector_index()
         
         return True
     

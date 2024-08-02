@@ -46,7 +46,7 @@ def _setup_openapi(app: FastAPI):
 
 def create_app() -> FastAPI:
     # Add LlamaIndex simple observability
-    Settings.global_handler = "simple"
+    #Settings.global_handler = "simple"
     
     # Add injector to request state    
     #async def bind_injector_to_request(request: Request) -> None:

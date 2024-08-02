@@ -18,7 +18,7 @@
       "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
-      "args": ["memorybank.server.app:app", "--reload", "--port", "7000"],
+      "args": ["memorybank.server.app:app", "--reload", "--port", "7001"],
       "jinja": true,
       "justMyCode": false
     }

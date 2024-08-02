@@ -9,6 +9,14 @@ Work in progress
 python -m venv venv
 ```
 
+```
+# venv\Scripts\python.exe -m pip install --upgrade pip
+
+WARNING: There was an error checking the latest version of pip.
+    rm -r $env:LOCALAPPDATA\pip\cache\selfcheck\
+```
+
+
 2. Activate the virtual environment
 ```bash
 PS: .\venv\Scripts\activate
@@ -31,6 +39,7 @@ python -m pip freeze > requirements.txt
 ngrok http http://localhost:7000
 
 ./venv/Lib/site-packages/llama_index
+pip install llama_index==0.10.12   
 
 ## Elasticsearch related
 
